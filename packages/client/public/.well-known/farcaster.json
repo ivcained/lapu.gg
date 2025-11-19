@@ -1,0 +1,18 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjAsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIn0",
+    "payload": "eyJkb21haW4iOiJsYXB1LmdnIn0",
+    "signature": "PLACEHOLDER_SIGNATURE"
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Lapu",
+    "iconUrl": "https://lapu.gg/icons/gravity.webp",
+    "homeUrl": "https://lapu.gg",
+    "imageUrl": "https://lapu.gg/icons/gravity.webp",
+    "buttonTitle": "Play Lapu",
+    "splashImageUrl": "https://lapu.gg/icons/gravity.webp",
+    "splashBackgroundColor": "#76ADAB",
+    "webhookUrl": "https://lapu.gg/api/webhook"
+  }
+}

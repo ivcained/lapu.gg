@@ -26,15 +26,28 @@ import {
   ClientConfig,
   createPublicClient,
   createWalletClient,
+  custom,
   fallback,
   Hex,
   http,
   parseEther,
   webSocket,
 } from "viem";
+import { sdk } from "@farcaster/miniapp-sdk";
 
 import { getNetworkConfig } from "./getNetworkConfig";
 import { world } from "./world";
+
+// Helper to check if we're running in a Farcaster miniapp context
+const isMiniApp = () => {
+  if (typeof window === "undefined") return false;
+  const url = new URL(window.location.href);
+  return (
+    url.searchParams.get("miniApp") === "true" ||
+    window.parent !== window ||
+    navigator.userAgent.includes("Farcaster")
+  );
+};
 
 export type SetupNetworkResult = Awaited<ReturnType<typeof setupNetwork>>;
 
@@ -54,14 +67,54 @@ export async function setupNetwork() {
   const publicClient = createPublicClient(clientOptions);
 
   /*
-   * Create a temporary wallet and a viem client for it
+   * Create a wallet client - uses Farcaster provider in miniapp context,
+   * otherwise falls back to burner wallet for development.
    * (see https://viem.sh/docs/clients/wallet.html).
    */
-  const burnerAccount = createBurnerAccount(networkConfig.privateKey as Hex);
-  const burnerWalletClient = createWalletClient({
-    ...clientOptions,
-    account: burnerAccount,
-  });
+  let walletClient;
+  let accountAddress: Hex;
+
+  if (isMiniApp()) {
+    // Use Farcaster wallet provider in miniapp context
+    try {
+      const provider = sdk.wallet.getEthereumProvider();
+      walletClient = createWalletClient({
+        chain: networkConfig.chain,
+        transport: custom(provider),
+      });
+      // Get the connected account address
+      const accounts = await walletClient.getAddresses();
+      if (accounts.length > 0) {
+        accountAddress = accounts[0];
+        console.log("[Farcaster]: Connected wallet address ->", accountAddress);
+      } else {
+        // Fall back to burner wallet if no accounts available
+        console.warn("[Farcaster]: No accounts available, falling back to burner wallet");
+        const burnerAccount = createBurnerAccount(networkConfig.privateKey as Hex);
+        walletClient = createWalletClient({
+          ...clientOptions,
+          account: burnerAccount,
+        });
+        accountAddress = burnerAccount.address;
+      }
+    } catch (error) {
+      console.warn("[Farcaster]: Failed to get wallet provider, falling back to burner wallet", error);
+      const burnerAccount = createBurnerAccount(networkConfig.privateKey as Hex);
+      walletClient = createWalletClient({
+        ...clientOptions,
+        account: burnerAccount,
+      });
+      accountAddress = burnerAccount.address;
+    }
+  } else {
+    // Use burner wallet for development
+    const burnerAccount = createBurnerAccount(networkConfig.privateKey as Hex);
+    walletClient = createWalletClient({
+      ...clientOptions,
+      account: burnerAccount,
+    });
+    accountAddress = burnerAccount.address;
+  }
 
   /*
    * Create an observable for contract writes that we can
@@ -76,7 +129,7 @@ export async function setupNetwork() {
     address: networkConfig.worldAddress as Hex,
     abi: IWorldAbi,
     publicClient,
-    walletClient: burnerWalletClient,
+    walletClient,
     onWrite: (write) => write$.next(write),
   });
 
@@ -100,8 +153,8 @@ export async function setupNetwork() {
    * less than 1 ETH. Repeat every 20 seconds to ensure you don't
    * run out.
    */
-  if (networkConfig.faucetServiceUrl) {
-    const address = burnerAccount.address;
+  if (networkConfig.faucetServiceUrl && !isMiniApp()) {
+    const address = accountAddress;
     console.info("[Dev Faucet]: Player address -> ", address);
 
     const faucet = createFaucetService(networkConfig.faucetServiceUrl);
@@ -128,10 +181,10 @@ export async function setupNetwork() {
     components,
     playerEntity: encodeEntity(
       { address: "address" },
-      { address: burnerWalletClient.account.address }
+      { address: accountAddress }
     ),
     publicClient,
-    walletClient: burnerWalletClient,
+    walletClient,
     latestBlock$,
     storedBlockLogs$,
     waitForTransaction,
