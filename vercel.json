@@ -1,13 +1,16 @@
 {
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "@vercel/node@latest"
-    }
-  },
+  "buildCommand": "pnpm build",
+  "outputDirectory": "packages/client/dist",
+  "devCommand": "pnpm dev:client",
+  "installCommand": "pnpm install",
+  "framework": null,
   "rewrites": [
     {
-      "source": "/.well-known/farcaster.json",
-      "destination": "/packages/client/public/.well-known/farcaster.json"
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     }
-  ]
+  ],
+  "env": {
+    "FARCASTER_DOMAIN": "lapu.gg"
+  }
 }

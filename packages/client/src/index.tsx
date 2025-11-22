@@ -11,6 +11,7 @@ import { setup } from "./mud/setup";
 import "@/styles/index.css";
 
 import { MUDProvider } from "./MUDProvider";
+import { AuthProvider } from "./contexts/AuthContext";
 
 // Helper to check if we're running in a Farcaster miniapp context
 const isMiniApp = () => {
@@ -32,6 +33,11 @@ const root = ReactDOM.createRoot(rootElement);
 setup().then(async (result) => {
   root.render(
     <React.StrictMode>
+      <MUDProvider value={result}>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </MUDProvider>
       <MiniKitProvider
         apiKey={import.meta.env.VITE_ONCHAINKIT_API_KEY}
         chain={base}
