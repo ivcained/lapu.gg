@@ -41,7 +41,7 @@
     "tailwind-merge": "^1.14.0",
     "three": "^0.157.0",
     "three-stdlib": "^2.27.0",
-    "viem": "1.14.0",
+    "viem": "2.27.0",
     "zustand": "^4.4.3"
   },
   "devDependencies": {
@@ -54,6 +54,7 @@
     "@types/react-dom": "^18.2.8",
     "@typescript-eslint/eslint-plugin": "^6.7.3",
     "@typescript-eslint/parser": "^6.7.3",
+    "@vercel/node": "^5.5.9",
     "@vitejs/plugin-react": "^3.1.0",
     "@vitejs/plugin-react-swc": "^3.4.0",
     "autoprefixer": "^10.4.16",
