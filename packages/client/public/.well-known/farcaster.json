@@ -2,7 +2,10 @@
   "accountAssociation": {
     "header": "eyJmaWQiOjAsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIn0",
     "payload": "eyJkb21haW4iOiJsYXB1LmdnIn0",
-    "signature": "PLACEHOLDER_SIGNATURE"
+    "signature": "MHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA"
+  },
+  "baseBuilder": {
+    "ownerAddress": "0x..."
   },
   "miniapp": {
     "version": "1",
@@ -11,8 +14,7 @@
     "description": "A blockchain-based city-building game where you create and manage your own floating city",
     "iconUrl": "https://lapu.gg/icons/gravity.webp",
     "homeUrl": "https://lapu.gg",
-    "imageUrl": "https://lapu.gg/icons/gravity.webp",
-    "buttonTitle": "Play Lapu",
+    "iconUrl": "https://lapu.gg/icons/gravity.webp",
     "splashImageUrl": "https://lapu.gg/icons/gravity.webp",
     "splashBackgroundColor": "#76ADAB",
     "webhookUrl": "https://lapu.gg/api/webhook",
