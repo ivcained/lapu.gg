@@ -1,0 +1,18 @@
+{
+  "miniapp": {
+    "version": "1",
+    "name": "Lapu",
+    "homeUrl": "https://lapu.gg",
+    "iconUrl": "https://lapu.gg/icon.png",
+    "splashImageUrl": "https://lapu.gg/splash.png",
+    "splashBackgroundColor": "#0066FF",
+    "subtitle": "Farcaster Mini App",
+    "description": "Lapu is a Farcaster Mini App.",
+    "primaryCategory": "social",
+    "tags": ["social", "farcaster", "miniapp"],
+    "tagline": "Experience Lapu",
+    "ogTitle": "Lapu Mini App",
+    "ogDescription": "Lapu is a Farcaster Mini App",
+    "ogImageUrl": "https://lapu.gg/og-image.png"
+  }
+}

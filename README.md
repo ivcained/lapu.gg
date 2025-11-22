@@ -1,36 +1,79 @@
+# Lapu Miniapp
 
-# mud
+A Farcaster Mini App built with Next.js, TypeScript, and React.
 
-[Waitlist](https://getwaitlist.com/waitlist/11113)
+## Features
 
-[mud quick start](https://mud.dev/quick-start)
+- 🔐 Farcaster authentication
+- 🎮 Interactive mini app experience
+- 🚀 Built with Next.js 15 and React 19
+- 💅 Styled with Tailwind CSS
+- 🔗 Web3 integration with wagmi and viem
 
 ## Prerequisites
 
-foundry (forge, anvil, cast)
-node.js (v16+)
-pnpm (after installing node: npm install --global pnpm)
+- Node.js 18+
+- npm or yarn or pnpm
 
-## Dev
+## Getting Started
 
-pnpm run dev
-http://localhost:3000
+1. Install dependencies:
+```bash
+npm install
+# or
+pnpm install
+# or
+yarn install
+```
 
-## Authentication
+2. Set up environment variables:
+```bash
+cp .env.example .env
+```
 
-This project uses **Farcaster Quick Auth** for secure, passwordless authentication. Users can sign in with their Farcaster identity and receive a verified JWT token.
+3. Run the development server:
+```bash
+npm run dev
+# or
+pnpm dev
+# or
+yarn dev
+```
 
-### Features
+4. Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-- 🔐 Secure JWT-based authentication
-- 🎯 Instant sign-in with Farcaster
-- 👤 User FID (Farcaster ID) verification
-- 🚀 No passwords or email verification required
+## Project Structure
 
-### Quick Start
+```
+├── src/
+│   ├── app/              # Next.js app directory
+│   │   ├── api/          # API routes
+│   │   └── ...           # Pages and layouts
+│   ├── components/       # React components
+│   ├── hooks/           # Custom React hooks
+│   └── lib/             # Utility functions and configurations
+├── public/              # Static assets
+└── ...                  # Configuration files
+```
 
-1. Click "Sign In with Farcaster" in the top-right corner
-2. Authenticate with your Farcaster identity
-3. The app receives your verified FID
+## Environment Variables
 
-For detailed documentation, see [AUTHENTICATION.md](./AUTHENTICATION.md).
+See `.env.example` for required environment variables.
+
+## Deployment
+
+This app is optimized for deployment on Vercel:
+
+```bash
+vercel deploy
+```
+
+## Learn More
+
+- [Farcaster Mini Apps Documentation](https://docs.farcaster.xyz/developers/mini-apps)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Tailwind CSS](https://tailwindcss.com/)
+
+## License
+
+MIT
