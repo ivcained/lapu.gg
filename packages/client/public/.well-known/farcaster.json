@@ -7,12 +7,21 @@
   "miniapp": {
     "version": "1",
     "name": "Lapu",
+    "subtitle": "Build your floating city in the sky",
+    "description": "A blockchain-based city-building game where you create and manage your own floating city",
     "iconUrl": "https://lapu.gg/icons/gravity.webp",
     "homeUrl": "https://lapu.gg",
     "imageUrl": "https://lapu.gg/icons/gravity.webp",
     "buttonTitle": "Play Lapu",
     "splashImageUrl": "https://lapu.gg/icons/gravity.webp",
     "splashBackgroundColor": "#76ADAB",
-    "webhookUrl": "https://lapu.gg/api/webhook"
+    "webhookUrl": "https://lapu.gg/api/webhook",
+    "primaryCategory": "games",
+    "tags": ["games", "blockchain", "city-building", "base", "mud"],
+    "heroImageUrl": "https://lapu.gg/icons/gravity.webp",
+    "tagline": "Build your floating city in the sky",
+    "ogTitle": "Lapu - Build Your Sky City",
+    "ogDescription": "Build your floating city in the sky on Base",
+    "ogImageUrl": "https://lapu.gg/icons/gravity.webp"
   }
 }
