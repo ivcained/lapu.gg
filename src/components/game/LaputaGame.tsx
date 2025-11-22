@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, useTexture, PerspectiveCamera } from "@react-three/drei";
+import { OrbitControls, useTexture, PerspectiveCamera, Html } from "@react-three/drei";
 import { useRef, useState, Suspense } from "react";
 import * as THREE from "three";
 import { Button } from "../ui/Button";
@@ -159,12 +159,14 @@ function GameScene({ currentIsland }: { currentIsland: number }) {
  */
 function LoadingFallback() {
   return (
-    <div className="flex items-center justify-center h-full">
-      <div className="text-center">
-        <div className="spinner h-8 w-8 mx-auto mb-4"></div>
-        <p className="text-sm text-gray-600 dark:text-gray-400">Loading Laputa...</p>
+    <Html center>
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Loading Laputa...</p>
+        </div>
       </div>
-    </div>
+    </Html>
   );
 }
 
@@ -253,21 +255,6 @@ export default function LaputaGame() {
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
-
-      <style jsx>{`
-        .spinner {
-          border: 3px solid rgba(255, 255, 255, 0.3);
-          border-top-color: #ffffff;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
     </div>
   );
 }

@@ -11,7 +11,7 @@ const LaputaGame = dynamic(() => import("~/components/game/LaputaGame"), {
   loading: () => (
     <div className="flex items-center justify-center h-screen">
       <div className="text-center">
-        <div className="spinner h-12 w-12 mx-auto mb-4"></div>
+        <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
         <p className="text-lg">Loading Laputa Game...</p>
       </div>
     </div>
@@ -54,21 +54,6 @@ export default function LaputaPage() {
           🎮 Use navigation buttons to explore different islands • Drag to rotate • Scroll to zoom
         </p>
       </div>
-
-      <style jsx>{`
-        .spinner {
-          border: 4px solid rgba(255, 255, 255, 0.3);
-          border-top-color: #ffffff;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
     </div>
   );
 }
