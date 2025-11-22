@@ -1,0 +1,248 @@
+/* Game Controls Container */
+.game-controls {
+  @apply fixed bottom-0 left-0 right-0 flex items-end justify-between p-4 pointer-events-none z-50;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* Mode Indicator */
+.mode-indicator {
+  @apply absolute top-4 left-1/2 -translate-x-1/2;
+}
+
+.mode-badge {
+  @apply px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(118, 234, 228, 0.3);
+  color: #76EAE4;
+}
+
+.mode-select {
+  @apply border-blue-400;
+  color: #60a5fa;
+}
+
+.mode-build {
+  @apply border-green-400;
+  color: #4ade80;
+}
+
+.mode-delete {
+  @apply border-red-400;
+  color: #f87171;
+}
+
+/* D-Pad Container */
+.dpad-container {
+  @apply pointer-events-auto;
+}
+
+.dpad {
+  @apply grid gap-1;
+  grid-template-columns: 48px 48px 48px;
+  grid-template-rows: 48px 48px 48px;
+  grid-template-areas:
+    ". up ."
+    "left center right"
+    ". down .";
+}
+
+.dpad-btn {
+  @apply flex items-center justify-center rounded-lg text-white font-bold transition-all duration-100 select-none;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(118, 234, 228, 0.3);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.dpad-btn:active {
+  background: rgba(118, 234, 228, 0.4);
+  transform: scale(0.95);
+  border-color: #76EAE4;
+}
+
+.dpad-up { grid-area: up; }
+.dpad-down { grid-area: down; }
+.dpad-left { grid-area: left; }
+.dpad-right { grid-area: right; }
+.dpad-center {
+  grid-area: center;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
+
+.dpad-arrow {
+  @apply text-lg;
+  color: #76EAE4;
+  text-shadow: 0 0 10px rgba(118, 234, 228, 0.5);
+}
+
+/* Center Controls */
+.center-controls {
+  @apply flex flex-col gap-2 pointer-events-auto;
+}
+
+.center-btn {
+  @apply px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-100 select-none;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(118, 234, 228, 0.3);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.center-btn:active {
+  background: rgba(118, 234, 228, 0.4);
+  transform: scale(0.95);
+  border-color: #76EAE4;
+}
+
+.center-label {
+  color: #76EAE4;
+  text-shadow: 0 0 10px rgba(118, 234, 228, 0.5);
+}
+
+/* Action Buttons Container */
+.action-container {
+  @apply pointer-events-auto;
+}
+
+.action-buttons {
+  @apply grid gap-1;
+  grid-template-columns: 48px 48px 48px;
+  grid-template-rows: 48px 48px 48px;
+  grid-template-areas:
+    ". y ."
+    "x . a"
+    ". b .";
+}
+
+.action-btn {
+  @apply flex items-center justify-center rounded-full text-white font-bold transition-all duration-100 select-none;
+  width: 48px;
+  height: 48px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(118, 234, 228, 0.3);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.action-btn:active {
+  transform: scale(0.9);
+}
+
+.action-btn.active {
+  background: rgba(118, 234, 228, 0.3);
+  border-color: #76EAE4;
+}
+
+/* Individual action button colors */
+.action-y {
+  grid-area: y;
+  border-color: rgba(250, 204, 21, 0.5);
+}
+.action-y:active {
+  background: rgba(250, 204, 21, 0.4);
+  border-color: #facc15;
+}
+.action-y .action-label {
+  color: #facc15;
+}
+
+.action-x {
+  grid-area: x;
+  border-color: rgba(96, 165, 250, 0.5);
+}
+.action-x:active {
+  background: rgba(96, 165, 250, 0.4);
+  border-color: #60a5fa;
+}
+.action-x .action-label {
+  color: #60a5fa;
+}
+
+.action-b {
+  grid-area: b;
+  border-color: rgba(248, 113, 113, 0.5);
+}
+.action-b:active {
+  background: rgba(248, 113, 113, 0.4);
+  border-color: #f87171;
+}
+.action-b .action-label {
+  color: #f87171;
+}
+
+.action-a {
+  grid-area: a;
+  border-color: rgba(74, 222, 128, 0.5);
+}
+.action-a:active {
+  background: rgba(74, 222, 128, 0.4);
+  border-color: #4ade80;
+}
+.action-a .action-label {
+  color: #4ade80;
+}
+
+.action-label {
+  @apply text-lg font-bold;
+  text-shadow: 0 0 10px currentColor;
+}
+
+/* Responsive adjustments for larger screens */
+@media (min-width: 768px) {
+  .game-controls {
+    @apply p-6;
+  }
+
+  .dpad {
+    grid-template-columns: 56px 56px 56px;
+    grid-template-rows: 56px 56px 56px;
+  }
+
+  .action-btn {
+    width: 56px;
+    height: 56px;
+  }
+
+  .action-buttons {
+    grid-template-columns: 56px 56px 56px;
+    grid-template-rows: 56px 56px 56px;
+  }
+}
+
+/* Hide on very large screens (desktop with keyboard) */
+@media (min-width: 1024px) {
+  .game-controls {
+    @apply opacity-50 hover:opacity-100 transition-opacity duration-300;
+  }
+}
+
+/* Ensure controls don't interfere with inventory */
+.game-controls {
+  margin-bottom: 10rem;
+}
+
+@media (max-height: 600px) {
+  .game-controls {
+    margin-bottom: 8rem;
+  }
+
+  .dpad {
+    grid-template-columns: 40px 40px 40px;
+    grid-template-rows: 40px 40px 40px;
+  }
+
+  .action-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .action-buttons {
+    grid-template-columns: 40px 40px 40px;
+    grid-template-rows: 40px 40px 40px;
+  }
+}
