@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useMiniApp } from "@neynar/react";
 import { useNeynarUser } from "~/hooks/useNeynarUser";
 import { Button } from "../Button";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Mountain } from "lucide-react";
 import { useRouter } from "next/navigation";
 import sdk from "@farcaster/miniapp-sdk";
 
@@ -162,6 +162,23 @@ export function HomeTab() {
             Connect with the community
           </span>{" "}
           • Share your progress
+        </p>
+      </div>
+
+      {/* Laputa Game Button */}
+      <div className="w-full max-w-md mb-4">
+        <Button
+          onClick={() => router.push("/laputa")}
+          className="w-full h-14 text-base font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-lg shadow-blue-500/50 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
+        >
+          <Mountain className="h-5 w-5" />
+          <span>⛰️ Explore Laputa Cities</span>
+        </Button>
+        <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-2">
+          <span className="font-semibold text-blue-600 dark:text-blue-400">
+            3D Floating Cities Game
+          </span>{" "}
+          • Navigate between islands
         </p>
       </div>
 
