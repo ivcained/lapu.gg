@@ -15,3 +15,12 @@ pnpm (after installing node: npm install --global pnpm)
 
 pnpm run dev
 http://localhost:3000
+
+## Notifications
+
+This project includes a notification system for Farcaster/Base miniapp. See [NOTIFICATIONS.md](./NOTIFICATIONS.md) for complete setup instructions.
+
+Quick setup:
+1. Get a Neynar API key from https://dev.neynar.com/
+2. Create `.env` file with `NEYNAR_API_KEY=your_key`
+3. Deploy to Vercel for the webhook to work

@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "@vercel/node@latest"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/.well-known/farcaster.json",
+      "destination": "/packages/client/public/.well-known/farcaster.json"
+    }
+  ]
+}
