@@ -4,6 +4,7 @@ import LoadingScreen from "@/components/loadingScreen/loadingScreen";
 
 import RootLayout from "./components/layout/layout";
 import GameRoot from "./game/gameRoot";
+import { ShareButton } from "./components/ui/ShareButton";
 import { useMUD } from "./useMUD";
 import { AuthButton } from "./components/auth/AuthButton";
 
@@ -34,6 +35,7 @@ export const App = () => {
       >
         mudBuildFacility
       </button>
+      <ShareButton />
       <LoadingScreen />
     </RootLayout>
   );
