@@ -9,6 +9,7 @@ import { setup } from "./mud/setup";
 import "@/styles/index.css";
 
 import { MUDProvider } from "./MUDProvider";
+import { AuthProvider } from "./contexts/AuthContext";
 
 // Helper to check if we're running in a Farcaster miniapp context
 const isMiniApp = () => {
@@ -31,7 +32,9 @@ setup().then(async (result) => {
   root.render(
     <React.StrictMode>
       <MUDProvider value={result}>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </MUDProvider>
     </React.StrictMode>
   );
