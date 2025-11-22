@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, useTexture, PerspectiveCamera, Html, Stars } from "@react-three/drei";
+import { OrbitControls, useTexture, PerspectiveCamera, Html, Stars, Environment } from "@react-three/drei";
 import { useRef, useState, Suspense, useMemo, useEffect } from "react";
 import * as THREE from "three";
 import { Button } from "../ui/Button";
@@ -194,20 +194,6 @@ function Structure({ position, image }: { position: [number, number, number]; im
 }
 
 /**
- * Sky background component
- */
-function Sky() {
-  const texture = useTexture("/textures/sunset.exr");
-
-  return (
-    <mesh>
-      <sphereGeometry args={[50, 32, 32]} />
-      <meshBasicMaterial map={texture} side={THREE.BackSide} />
-    </mesh>
-  );
-}
-
-/**
  * Game scene component containing all 3D elements
  */
 function GameScene({
@@ -281,7 +267,7 @@ function GameScene({
       <PerspectiveCamera ref={cameraRef} makeDefault position={[3, 2, 5]} />
 
       {/* Enhanced lighting */}
-      <Sky />
+      <Environment files="/textures/sunset.exr" background />
       <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
 
       <ambientLight intensity={0.4} />
