@@ -2,6 +2,8 @@ import React from "react";
 import mudConfig from "contracts/mud.config";
 import ReactDOM from "react-dom/client";
 import { sdk } from "@farcaster/miniapp-sdk";
+import { MiniKitProvider } from "@coinbase/onchainkit/minikit";
+import { base } from "viem/chains";
 
 import { App } from "./App";
 import { setup } from "./mud/setup";
@@ -9,6 +11,7 @@ import { setup } from "./mud/setup";
 import "@/styles/index.css";
 
 import { MUDProvider } from "./MUDProvider";
+import { AuthProvider } from "./contexts/AuthContext";
 
 // Helper to check if we're running in a Farcaster miniapp context
 const isMiniApp = () => {
@@ -31,8 +34,26 @@ setup().then(async (result) => {
   root.render(
     <React.StrictMode>
       <MUDProvider value={result}>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </MUDProvider>
+      <MiniKitProvider
+        apiKey={import.meta.env.VITE_ONCHAINKIT_API_KEY}
+        chain={base}
+        config={{
+          appearance: {
+            name: import.meta.env.VITE_APP_NAME || "Lapu",
+            logo:
+              import.meta.env.VITE_APP_ICON_URL ||
+              "https://lapu.gg/icons/gravity.webp",
+          },
+        }}
+      >
+        <MUDProvider value={result}>
+          <App />
+        </MUDProvider>
+      </MiniKitProvider>
     </React.StrictMode>
   );
 
