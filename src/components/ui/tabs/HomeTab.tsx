@@ -63,15 +63,14 @@ export function HomeTab() {
     }
 
     // Navigate to squat tracking page in same window
-    const squatUrl = `/squat?fid=${
-      context.user.fid
-    }&username=${encodeURIComponent(neynarUser.username)}`;
+    const squatUrl = `/squat?fid=${context.user.fid
+      }&username=${encodeURIComponent(neynarUser.username)}`;
     router.push(squatUrl);
   };
 
   const handleJoinClub = async () => {
     // Open the /jessesquats channel in external browser (SDK required for external URLs)
-    const channelUrl = "https://farcaster.xyz/~/channel/jessesquats";
+    const channelUrl = "https://farcaster.xyz/";
 
     try {
       await sdk.actions.openUrl(channelUrl);
@@ -113,10 +112,10 @@ export function HomeTab() {
         </div>
 
         <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-          JesseSquats
+          Lapu
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
-          Track your squats. Earn jsqt. Dominate the leaderboard.
+          Floating Worlds
         </p>
       </div>
 
@@ -128,7 +127,7 @@ export function HomeTab() {
               {stats.totalSquats}
             </div>
             <div className="text-xs text-gray-600 dark:text-gray-400">
-              Total Squats
+              Total lapu
             </div>
           </div>
           <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-xl p-4 text-center border border-yellow-500/20">
@@ -136,7 +135,7 @@ export function HomeTab() {
               {stats.jsqtPoints}
             </div>
             <div className="text-xs text-gray-600 dark:text-gray-400">
-              jsqt Points
+              lapu Points
             </div>
           </div>
           <div className="bg-gradient-to-br from-red-500/10 to-pink-500/10 rounded-xl p-4 text-center border border-red-500/20">
@@ -155,7 +154,7 @@ export function HomeTab() {
           className="w-full h-14 text-base font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg shadow-purple-500/50 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
         >
           <Sparkles className="h-5 w-5" />
-          <span>Join /jessesquats Channel</span>
+          <span>Join /lapu Channel</span>
         </Button>
         <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-2">
           <span className="font-semibold text-purple-600 dark:text-purple-400">
@@ -170,7 +169,7 @@ export function HomeTab() {
         onClick={handleSquatOff}
         className="w-full max-w-md mb-8 h-16 text-xl font-bold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg shadow-orange-500/50 transition-all duration-300 hover:scale-105"
       >
-        💪 Squat Off
+        💪 lapu Off
       </Button>
 
       {/* Leaderboard Preview */}
@@ -181,27 +180,25 @@ export function HomeTab() {
             {leaderboard.slice(0, 5).map((user, index) => (
               <div
                 key={user.fid}
-                className={`flex items-center justify-between p-3 rounded-lg ${
-                  index === 0
-                    ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30"
-                    : index === 1
+                className={`flex items-center justify-between p-3 rounded-lg ${index === 0
+                  ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30"
+                  : index === 1
                     ? "bg-gradient-to-r from-gray-400/20 to-gray-500/20 border border-gray-400/30"
                     : index === 2
-                    ? "bg-gradient-to-r from-orange-700/20 to-orange-800/20 border border-orange-700/30"
-                    : "bg-gray-100 dark:bg-gray-800"
-                }`}
+                      ? "bg-gradient-to-r from-orange-700/20 to-orange-800/20 border border-orange-700/30"
+                      : "bg-gray-100 dark:bg-gray-800"
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                      index === 0
-                        ? "bg-yellow-500 text-white"
-                        : index === 1
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${index === 0
+                      ? "bg-yellow-500 text-white"
+                      : index === 1
                         ? "bg-gray-400 text-white"
                         : index === 2
-                        ? "bg-orange-700 text-white"
-                        : "bg-gray-300 dark:bg-gray-700"
-                    }`}
+                          ? "bg-orange-700 text-white"
+                          : "bg-gray-300 dark:bg-gray-700"
+                      }`}
                   >
                     {index + 1}
                   </div>
