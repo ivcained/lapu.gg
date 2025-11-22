@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useMiniApp } from "@neynar/react";
-import { useNeynarUser } from "~/hooks/useNeynarUser";
 import { Button } from "../Button";
 import { Mountain } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -19,7 +18,6 @@ import { useRouter } from "next/navigation";
 export function HomeTab() {
   const miniApp = useMiniApp();
   const { context } = miniApp;
-  const { user: neynarUser } = useNeynarUser(context || undefined);
   const router = useRouter();
 
   const [userStats, setUserStats] = useState<any>(null);
@@ -54,18 +52,6 @@ export function HomeTab() {
 
     fetchData();
   }, [context?.user?.fid]);
-
-  const handleSquatOff = () => {
-    if (!context?.user?.fid || !neynarUser) {
-      alert("Please wait for user data to load");
-      return;
-    }
-
-    // Navigate to squat tracking page in same window
-    const squatUrl = `/squat?fid=${context.user.fid
-      }&username=${encodeURIComponent(neynarUser.username)}`;
-    router.push(squatUrl);
-  };
 
 
   if (loading) {

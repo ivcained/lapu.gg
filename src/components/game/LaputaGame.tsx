@@ -6,17 +6,14 @@ import {
   PerspectiveCamera,
   Html,
   Float,
-  Text,
-  useTexture,
   Sky,
   Cloud,
-  Stars,
 } from "@react-three/drei";
-import { useRef, useState, Suspense, useEffect, useMemo } from "react";
+import { useRef, useState, Suspense, useEffect } from "react";
 import * as THREE from "three";
 import { useMiniApp } from "@neynar/react";
 import { Button } from "../ui/Button";
-import { Zap, Hammer, Users, MapPin, Plus, ArrowUpCircle } from "lucide-react";
+import { Zap, Hammer, MapPin, ArrowUpCircle } from "lucide-react";
 
 // --- Types ---
 type ResourceType = "AETHER" | "STONE";
@@ -147,8 +144,8 @@ function SkyIsland({ houseLevel }: { houseLevel: number }) {
           <boxGeometry args={[1.5, 1, 1.5]} />
           <meshStandardMaterial color="#fcd34d" />
         </mesh>
-        <mesh position={[0, 1.5, 0]} castShadow>
-          <coneGeometry args={[1.2, 1, 4]} rotation={[0, Math.PI / 4, 0]} />
+        <mesh position={[0, 1.5, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
+          <coneGeometry args={[1.2, 1, 4]} />
           <meshStandardMaterial color="#ef4444" />
         </mesh>
 
@@ -246,8 +243,8 @@ function GameScene({
       <Sky sunPosition={[100, 20, 100]} turbidity={0.5} rayleigh={0.5} />
       <ambientLight intensity={0.6} />
       <directionalLight position={[10, 20, 10]} intensity={1.5} castShadow shadow-mapSize={[1024, 1024]} />
-      <Cloud opacity={0.5} speed={0.4} width={10} depth={1.5} segments={20} position={[0, 10, -10]} />
-      <Cloud opacity={0.3} speed={0.3} width={10} depth={1.5} segments={20} position={[10, 5, -15]} />
+      <Cloud opacity={0.5} speed={0.4} position={[0, 10, -10]} />
+      <Cloud opacity={0.3} speed={0.3} position={[10, 5, -15]} />
 
       {/* Main Island */}
       <Float speed={1} rotationIntensity={0.1} floatIntensity={0.2}>
@@ -270,7 +267,7 @@ function GameScene({
  * Main Game Component
  */
 export default function LaputaGame() {
-  const { user } = useMiniApp(); // Get Farcaster User
+  const { context } = useMiniApp(); // Get Farcaster context
   const [gameState, setGameState] = useState<GameState>({
     resources: { aether: 0, stone: 0 },
     buildings: { houseLevel: 1, crystalLevel: 1 },
@@ -360,12 +357,12 @@ export default function LaputaGame() {
 
           {/* User Profile */}
           <div className="bg-white/80 backdrop-blur-md rounded-full pl-2 pr-4 py-2 flex items-center gap-3 shadow-lg border border-blue-100">
-            {user?.pfpUrl ? (
-              <img src={user.pfpUrl} alt="pfp" className="w-8 h-8 rounded-full border-2 border-blue-400" />
+            {context?.user?.pfpUrl ? (
+              <img src={context.user.pfpUrl} alt="pfp" className="w-8 h-8 rounded-full border-2 border-blue-400" />
             ) : (
               <div className="w-8 h-8 rounded-full bg-blue-400" />
             )}
-            <span className="font-bold text-slate-700">@{user?.username || "Guest"}</span>
+            <span className="font-bold text-slate-700">@{context?.user?.username || "Guest"}</span>
           </div>
         </div>
 
