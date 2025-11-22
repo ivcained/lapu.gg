@@ -239,8 +239,8 @@ export function HomeTab() {
       {!stats && (
         <div className="text-center mt-6 p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
           <p className="text-sm text-blue-600 dark:text-blue-400">
-            Welcome! Tap &quot;Squat Off&quot; to start your first session and
-            earn jsqt points!
+            ⛰️ Welcome to Laputa! Explore floating cities, navigate between
+            islands, and discover the world above the clouds!
           </p>
         </div>
       )}
