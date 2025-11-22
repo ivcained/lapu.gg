@@ -1,505 +1,452 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, useTexture, PerspectiveCamera, Html, Stars, Environment } from "@react-three/drei";
-import { useRef, useState, Suspense, useMemo, useEffect } from "react";
+import {
+  OrbitControls,
+  PerspectiveCamera,
+  Html,
+  Stars,
+  Float,
+  Text,
+  MeshTransmissionMaterial,
+  Trail,
+} from "@react-three/drei";
+import { useRef, useState, Suspense, useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { Button } from "../ui/Button";
-import { ChevronLeft, ChevronRight, RotateCcw, Play, Pause, Zap } from "lucide-react";
+import { Play, Pause, RotateCcw, Zap, Activity, Cpu, ShieldCheck } from "lucide-react";
 
-/**
- * Particle Cloud system for ambient atmosphere
- */
-function ParticleCloud({ count = 100 }: { count?: number }) {
-  const pointsRef = useRef<THREE.Points>(null);
+// --- Game Constants ---
+const TOTAL_LEVELS = 5;
+const INITIAL_TIME = 60;
 
-  const particles = useMemo(() => {
-    const positions = new Float32Array(count * 3);
-    const velocities = new Float32Array(count * 3);
+// --- Types ---
+type GameState = "MENU" | "PLAYING" | "PAUSED" | "COMPLETED" | "GAMEOVER";
 
-    for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 20;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
-
-      velocities[i * 3] = (Math.random() - 0.5) * 0.02;
-      velocities[i * 3 + 1] = Math.random() * 0.01;
-      velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.02;
-    }
-
-    return { positions, velocities };
-  }, [count]);
-
-  useFrame(() => {
-    if (pointsRef.current) {
-      const positions = pointsRef.current.geometry.attributes.position.array as Float32Array;
-
-      for (let i = 0; i < count; i++) {
-        positions[i * 3] += particles.velocities[i * 3];
-        positions[i * 3 + 1] += particles.velocities[i * 3 + 1];
-        positions[i * 3 + 2] += particles.velocities[i * 3 + 2];
-
-        // Wrap particles around
-        if (positions[i * 3] > 10) positions[i * 3] = -10;
-        if (positions[i * 3] < -10) positions[i * 3] = 10;
-        if (positions[i * 3 + 1] > 5) positions[i * 3 + 1] = -5;
-        if (positions[i * 3 + 2] > 10) positions[i * 3 + 2] = -10;
-        if (positions[i * 3 + 2] < -10) positions[i * 3 + 2] = 10;
-      }
-
-      pointsRef.current.geometry.attributes.position.needsUpdate = true;
-    }
-  });
-
-  return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[particles.positions, 3]}
-        />
-      </bufferGeometry>
-      <pointsMaterial size={0.05} color="#ffffff" transparent opacity={0.6} sizeAttenuation />
-    </points>
-  );
-}
-
-/**
- * Energy Crystal component - collectible items
- */
-function EnergyCrystal({ position, onCollect }: { position: [number, number, number]; onCollect: () => void }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [collected, setCollected] = useState(false);
-
-  useFrame((state) => {
-    if (meshRef.current && !collected) {
-      meshRef.current.rotation.y += 0.05;
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.1;
-    }
-  });
-
-  const handleClick = () => {
-    if (!collected) {
-      setCollected(true);
-      onCollect();
-    }
-  };
-
-  if (collected) return null;
-
-  return (
-    <mesh ref={meshRef} position={position} onClick={handleClick}>
-      <octahedronGeometry args={[0.2, 0]} />
-      <meshStandardMaterial
-        color="#ffdd00"
-        emissive="#ffaa00"
-        emissiveIntensity={0.5}
-        metalness={0.8}
-        roughness={0.2}
-      />
-    </mesh>
-  );
-}
-
-/**
- * Floating Island component - represents a Laputa floating city
- */
-function FloatingIsland({
-  position,
-  texture,
-  scale = 1,
-  isActive = false
-}: {
+interface UplinkNodeProps {
   position: [number, number, number];
-  texture: string;
-  scale?: number;
-  isActive?: boolean;
-}) {
+  isActive: boolean;
+  onActivate: () => void;
+}
+
+// --- Components ---
+
+/**
+ * UplinkNode: The interactive target the player must click.
+ */
+function UplinkNode({ position, isActive, onActivate }: UplinkNodeProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
-  // Load texture
-  const textureMap = useTexture(texture);
-
-  // Animation in game loop with enhanced physics
   useFrame((state) => {
     if (meshRef.current) {
-      // Advanced floating animation with sine waves
-      const time = state.clock.elapsedTime;
-      meshRef.current.position.y =
-        position[1] +
-        Math.sin(time + position[0]) * 0.2 +
-        Math.sin(time * 0.5 + position[0] * 2) * 0.1;
+      // Pulse animation
+      const scale = hovered ? 1.2 : 1;
+      const pulse = isActive ? 1 : Math.sin(state.clock.elapsedTime * 5) * 0.1 + 1;
+      meshRef.current.scale.lerp(new THREE.Vector3(scale * pulse, scale * pulse, scale * pulse), 0.1);
 
-      // Slow rotation with slight wobble
-      meshRef.current.rotation.y += 0.003;
-      meshRef.current.rotation.x = Math.sin(time * 0.3) * 0.05;
-      meshRef.current.rotation.z = Math.cos(time * 0.3) * 0.05;
-
-      // Scale on hover or when active
-      const targetScale = (hovered || isActive) ? scale * 1.15 : scale;
-      meshRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
+      // Rotation
+      meshRef.current.rotation.x += 0.02;
+      meshRef.current.rotation.y += 0.02;
     }
   });
 
   return (
-    <group>
+    <group position={position}>
       <mesh
         ref={meshRef}
-        position={position}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!isActive) onActivate();
+        }}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
-        castShadow
-        receiveShadow
       >
-        <boxGeometry args={[2 * scale, 0.5 * scale, 2 * scale]} />
+        <octahedronGeometry args={[0.3, 0]} />
         <meshStandardMaterial
-          map={textureMap}
-          emissive={isActive ? "#4488ff" : "#000000"}
-          emissiveIntensity={isActive ? 0.2 : 0}
+          color={isActive ? "#00ffff" : "#ff0055"}
+          emissive={isActive ? "#00ffff" : "#ff0055"}
+          emissiveIntensity={isActive ? 2 : 0.5}
+          toneMapped={false}
         />
       </mesh>
-
-      {/* Glow ring when active */}
-      {isActive && (
-        <mesh position={[position[0], position[1] - 0.3, position[2]]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[scale * 1.5, 0.05, 16, 32]} />
-          <meshBasicMaterial color="#4488ff" transparent opacity={0.6} />
-        </mesh>
-      )}
+      {/* Connection Line to center */}
+      <line>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            count={2}
+            array={new Float32Array([0, 0, 0, -position[0], -position[1], -position[2]])}
+            itemSize={3}
+          />
+        </bufferGeometry>
+        <lineBasicMaterial color={isActive ? "#00ffff" : "#330011"} transparent opacity={0.3} />
+      </line>
     </group>
   );
 }
 
 /**
- * Structure component - represents buildings/structures on islands
+ * DataCluster: The central procedural object representing a level.
  */
-function Structure({ position, image }: { position: [number, number, number]; image: string }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const texture = useTexture(image);
+function DataCluster({
+  level,
+  nodes,
+  activeNodes,
+  onNodeActivate,
+}: {
+  level: number;
+  nodes: [number, number, number][];
+  activeNodes: boolean[];
+  onNodeActivate: (index: number) => void;
+}) {
+  const groupRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
-    if (meshRef.current) {
-      // Gentle bobbing
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.5 + position[0]) * 0.1;
+    if (groupRef.current) {
+      // Slow rotation of the entire cluster
+      groupRef.current.rotation.y = state.clock.elapsedTime * 0.05;
     }
   });
 
+  // Procedural geometry based on level
+  const CoreGeometry = useMemo(() => {
+    if (level % 3 === 0) return <icosahedronGeometry args={[1.5, 0]} />;
+    if (level % 3 === 1) return <dodecahedronGeometry args={[1.5, 0]} />;
+    return <octahedronGeometry args={[1.5, 0]} />;
+  }, [level]);
+
   return (
-    <mesh ref={meshRef} position={position}>
-      <planeGeometry args={[1.5, 1.5]} />
-      <meshStandardMaterial map={texture} transparent side={THREE.DoubleSide} />
-    </mesh>
+    <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
+      <group ref={groupRef}>
+        {/* Central Core */}
+        <mesh>
+          {CoreGeometry}
+          <meshPhysicalMaterial
+            color="#000000"
+            roughness={0.2}
+            metalness={1}
+            emissive="#001133"
+            emissiveIntensity={0.2}
+            wireframe
+          />
+        </mesh>
+
+        {/* Inner Glowing Core */}
+        <mesh>
+          <sphereGeometry args={[0.8, 16, 16]} />
+          <meshBasicMaterial color="#00ffff" wireframe transparent opacity={0.1} />
+        </mesh>
+
+        {/* Orbiting Rings */}
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[2.5, 0.02, 16, 100]} />
+          <meshBasicMaterial color="#00ffff" transparent opacity={0.3} />
+        </mesh>
+        <mesh rotation={[0, 0, Math.PI / 4]}>
+          <torusGeometry args={[3, 0.02, 16, 100]} />
+          <meshBasicMaterial color="#ff00ff" transparent opacity={0.2} />
+        </mesh>
+
+        {/* Interactive Nodes */}
+        {nodes.map((pos, idx) => (
+          <UplinkNode
+            key={idx}
+            position={pos}
+            isActive={activeNodes[idx]}
+            onActivate={() => onNodeActivate(idx)}
+          />
+        ))}
+      </group>
+    </Float>
   );
 }
 
 /**
- * Game scene component containing all 3D elements
+ * GameScene: Manages the 3D world.
  */
 function GameScene({
-  currentIsland,
-  onCrystalCollect,
-  gameTime: _gameTime
+  gameState,
+  level,
+  nodes,
+  activeNodes,
+  onNodeActivate,
 }: {
-  currentIsland: number;
-  onCrystalCollect: () => void;
-  gameTime: number;
+  gameState: GameState;
+  level: number;
+  nodes: [number, number, number][];
+  activeNodes: boolean[];
+  onNodeActivate: (index: number) => void;
 }) {
-  // Define islands with different textures and positions
-  const islands = [
-    { position: [0, 0, 0] as [number, number, number], texture: "/textures/rockface.webp", scale: 1.5 },
-    { position: [5, -1, -2] as [number, number, number], texture: "/textures/box01.webp", scale: 1.2 },
-    { position: [-4, 1, -3] as [number, number, number], texture: "/textures/rockface.webp", scale: 1.0 },
-    { position: [6, 2, 3] as [number, number, number], texture: "/textures/box01.webp", scale: 1.3 },
-    { position: [-6, -2, 2] as [number, number, number], texture: "/textures/rockface.webp", scale: 1.1 },
-  ];
-
-  // Define structures with images from art directory
-  const structures = [
-    { position: [0, 1.5, 0] as [number, number, number], image: "/art/house.webp" },
-    { position: [5, 0.5, -2] as [number, number, number], image: "/art/turbine.webp" },
-    { position: [-4, 2.5, -3] as [number, number, number], image: "/art/power.webp" },
-    { position: [2, 0.3, 1] as [number, number, number], image: "/art/vault.webp" },
-    { position: [-2, 0.3, 2] as [number, number, number], image: "/art/turbine2.webp" },
-    { position: [6, 3, 3] as [number, number, number], image: "/art/turbine3.webp" },
-    { position: [-6, -1, 2] as [number, number, number], image: "/art/vault2.webp" },
-    { position: [1, 1, -1] as [number, number, number], image: "/art/couple.webp" },
-    { position: [-3, 1.5, 0] as [number, number, number], image: "/art/friends.webp" },
-  ];
-
-  // Define collectible crystals
-  const crystals = [
-    { position: [1, 1.5, 0.5] as [number, number, number] },
-    { position: [5.5, 0.8, -1.5] as [number, number, number] },
-    { position: [-3.5, 2.8, -2.5] as [number, number, number] },
-    { position: [6.5, 3.2, 3.5] as [number, number, number] },
-    { position: [-5.5, -0.8, 2.5] as [number, number, number] },
-  ];
-
-  const cameraRef = useRef<THREE.PerspectiveCamera>(null);
-
-  // Enhanced camera animation with smooth transitions
-  useFrame((state) => {
-    if (cameraRef.current) {
-      const targetIsland = islands[currentIsland % islands.length];
-      const time = state.clock.elapsedTime;
-
-      // Camera orbit around island
-      const radius = 5;
-      const angle = time * 0.1;
-      const targetPosition = new THREE.Vector3(
-        targetIsland.position[0] + Math.cos(angle) * radius,
-        targetIsland.position[1] + 2 + Math.sin(time * 0.3) * 0.5,
-        targetIsland.position[2] + Math.sin(angle) * radius
-      );
-
-      cameraRef.current.position.lerp(targetPosition, 0.02);
-      cameraRef.current.lookAt(
-        targetIsland.position[0],
-        targetIsland.position[1],
-        targetIsland.position[2]
-      );
-    }
-  });
-
   return (
     <>
-      <PerspectiveCamera ref={cameraRef} makeDefault position={[3, 2, 5]} />
+      <PerspectiveCamera makeDefault position={[0, 0, 8]} />
+      <OrbitControls enablePan={false} minDistance={5} maxDistance={15} autoRotate={gameState === "MENU"} autoRotateSpeed={0.5} />
 
-      {/* Enhanced lighting */}
-      <Environment files="/textures/sunset.exr" background />
-      <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+      {/* Lighting */}
+      <ambientLight intensity={0.2} />
+      <pointLight position={[10, 10, 10]} intensity={1} color="#00ffff" />
+      <pointLight position={[-10, -10, -10]} intensity={1} color="#ff00ff" />
 
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[10, 10, 5]} intensity={1.2} castShadow />
-      <pointLight position={[-10, 10, -10]} intensity={0.7} color="#ffa500" />
-      <pointLight position={[5, -5, 5]} intensity={0.4} color="#4488ff" />
+      {/* Environment */}
+      <Stars radius={50} depth={50} count={3000} factor={4} saturation={0} fade speed={1} />
 
-      {/* Fog for depth */}
-      <fog attach="fog" args={["#1a0633", 10, 50]} />
-
-      {/* Particle systems */}
-      <ParticleCloud count={200} />
-
-      {/* Render all islands */}
-      {islands.map((island, idx) => (
-        <FloatingIsland
-          key={`island-${idx}`}
-          position={island.position}
-          texture={island.texture}
-          scale={island.scale}
-          isActive={idx === currentIsland % islands.length}
-        />
-      ))}
-
-      {/* Render all structures */}
-      {structures.map((structure, idx) => (
-        <Structure key={`structure-${idx}`} position={structure.position} image={structure.image} />
-      ))}
-
-      {/* Render energy crystals */}
-      {crystals.map((crystal, idx) => (
-        <EnergyCrystal
-          key={`crystal-${idx}`}
-          position={crystal.position}
-          onCollect={onCrystalCollect}
-        />
-      ))}
-
-      <OrbitControls
-        enableZoom={true}
-        enablePan={true}
-        minDistance={3}
-        maxDistance={15}
-        maxPolarAngle={Math.PI / 2}
+      {/* Game Object */}
+      <DataCluster
+        level={level}
+        nodes={nodes}
+        activeNodes={activeNodes}
+        onNodeActivate={onNodeActivate}
       />
+
+      {/* Background Grid (Visual only) */}
+      <gridHelper args={[50, 50, 0x111111, 0x050505]} position={[0, -5, 0]} />
     </>
   );
 }
 
 /**
- * Loading fallback component
+ * Loading Fallback
  */
 function LoadingFallback() {
   return (
     <Html center>
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Loading Laputa...</p>
-        </div>
-      </div>
+      <div className="text-cyan-500 font-mono text-sm animate-pulse">LOADING ASSETS...</div>
     </Html>
   );
 }
 
 /**
- * Main Laputa Game component with navigation and controls
+ * Main Game Component
  */
 export default function LaputaGame() {
-  const [currentIsland, setCurrentIsland] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [crystalsCollected, setCrystalsCollected] = useState(0);
-  const [gameTime, setGameTime] = useState(0);
-  const [showCollectNotification, setShowCollectNotification] = useState(false);
-  const totalIslands = 5;
-  const totalCrystals = 5;
+  // --- State ---
+  const [gameState, setGameState] = useState<GameState>("MENU");
+  const [level, setLevel] = useState(1);
+  const [score, setScore] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(INITIAL_TIME);
 
-  // Game loop timer
-  useEffect(() => {
-    if (!isPaused) {
-      const interval = setInterval(() => {
-        setGameTime((prev) => prev + 1);
-      }, 1000);
-      return () => clearInterval(interval);
+  // Level Data
+  const [nodes, setNodes] = useState<[number, number, number][]>([]);
+  const [activeNodes, setActiveNodes] = useState<boolean[]>([]);
+
+  // --- Audio (Simulated) ---
+  const playSound = (type: "click" | "success" | "fail") => {
+    // In a real app, use Audio API. Here we just log or use visual feedback.
+    // console.log(`Audio: ${type}`);
+  };
+
+  // --- Game Logic ---
+
+  // Generate Level
+  const generateLevel = (lvl: number) => {
+    const nodeCount = 3 + lvl; // Increase difficulty
+    const newNodes: [number, number, number][] = [];
+    for (let i = 0; i < nodeCount; i++) {
+      // Random points on a sphere surface
+      const phi = Math.acos(-1 + (2 * i) / nodeCount);
+      const theta = Math.sqrt(nodeCount * Math.PI) * phi;
+      const r = 2; // Radius from center
+
+      newNodes.push([
+        r * Math.cos(theta) * Math.sin(phi),
+        r * Math.sin(theta) * Math.sin(phi),
+        r * Math.cos(phi),
+      ]);
     }
-  }, [isPaused]);
-
-  const handlePrevIsland = () => {
-    setCurrentIsland((prev) => (prev > 0 ? prev - 1 : totalIslands - 1));
+    setNodes(newNodes);
+    setActiveNodes(new Array(nodeCount).fill(false));
   };
 
-  const handleNextIsland = () => {
-    setCurrentIsland((prev) => (prev < totalIslands - 1 ? prev + 1 : 0));
+  // Start Game
+  const startGame = () => {
+    setGameState("PLAYING");
+    setLevel(1);
+    setScore(0);
+    setTimeLeft(INITIAL_TIME);
+    generateLevel(1);
   };
 
-  const handleReset = () => {
-    setCurrentIsland(0);
-    setGameTime(0);
+  // Next Level
+  const nextLevel = () => {
+    if (level >= TOTAL_LEVELS) {
+      setGameState("COMPLETED");
+    } else {
+      setLevel((prev) => prev + 1);
+      setTimeLeft((prev) => prev + 15); // Bonus time
+      generateLevel(level + 1);
+      playSound("success");
+    }
   };
 
-  const togglePause = () => {
-    setIsPaused((prev) => !prev);
+  // Node Activation
+  const handleNodeActivate = (index: number) => {
+    if (gameState !== "PLAYING") return;
+
+    const newActive = [...activeNodes];
+    newActive[index] = true;
+    setActiveNodes(newActive);
+    setScore((prev) => prev + 100);
+    playSound("click");
+
+    // Check if level complete
+    if (newActive.every((n) => n)) {
+      setTimeout(nextLevel, 500); // Delay for effect
+    }
   };
 
-  const handleCrystalCollect = () => {
-    setCrystalsCollected((prev) => prev + 1);
-    setShowCollectNotification(true);
-    setTimeout(() => setShowCollectNotification(false), 2000);
-  };
+  // Timer
+  useEffect(() => {
+    if (gameState === "PLAYING") {
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            setGameState("GAMEOVER");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [gameState]);
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
+  // --- UI Components ---
+
+  const MenuOverlay = () => (
+    <div className="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-50">
+      <div className="text-center space-y-6 p-8 border border-cyan-500/30 bg-black/50 rounded-lg shadow-[0_0_30px_rgba(6,182,212,0.2)] max-w-md w-full">
+        <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 tracking-tighter">
+          CYBER-LINK
+        </h1>
+        <p className="text-cyan-100/70 text-sm">
+          Synchronize the data nodes before the system crashes.
+          <br />
+          Click <span className="text-red-400">RED</span> nodes to stabilize them.
+        </p>
+        <Button
+          onClick={startGame}
+          className="w-full h-14 text-lg font-bold bg-cyan-600 hover:bg-cyan-500 text-black shadow-[0_0_15px_rgba(6,182,212,0.5)] transition-all hover:scale-105"
+        >
+          <Play className="mr-2 h-5 w-5" /> INITIALIZE LINK
+        </Button>
+      </div>
+    </div>
+  );
+
+  const GameOverOverlay = () => (
+    <div className="absolute inset-0 flex items-center justify-center bg-red-950/80 backdrop-blur-sm z-50">
+      <div className="text-center space-y-6 p-8 border border-red-500/30 bg-black/50 rounded-lg">
+        <h2 className="text-3xl font-bold text-red-500 tracking-widest">CONNECTION LOST</h2>
+        <div className="text-2xl font-mono text-white">SCORE: {score}</div>
+        <Button
+          onClick={startGame}
+          className="w-full h-12 bg-red-600 hover:bg-red-500 text-white"
+        >
+          <RotateCcw className="mr-2 h-4 w-4" /> REBOOT SYSTEM
+        </Button>
+      </div>
+    </div>
+  );
+
+  const CompletedOverlay = () => (
+    <div className="absolute inset-0 flex items-center justify-center bg-green-950/80 backdrop-blur-sm z-50">
+      <div className="text-center space-y-6 p-8 border border-green-500/30 bg-black/50 rounded-lg">
+        <h2 className="text-3xl font-bold text-green-400 tracking-widest">SYSTEM SYNCHRONIZED</h2>
+        <div className="text-2xl font-mono text-white">FINAL SCORE: {score}</div>
+        <Button
+          onClick={startGame}
+          className="w-full h-12 bg-green-600 hover:bg-green-500 text-white"
+        >
+          <RotateCcw className="mr-2 h-4 w-4" /> NEW SESSION
+        </Button>
+      </div>
+    </div>
+  );
+
+  const HUD = () => (
+    <div className="absolute inset-0 pointer-events-none p-6 flex flex-col justify-between z-40">
+      {/* Top Bar */}
+      <div className="flex justify-between items-start">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 text-cyan-400 bg-black/40 backdrop-blur-md px-4 py-2 rounded border border-cyan-500/20">
+            <Activity className="h-4 w-4 animate-pulse" />
+            <span className="font-mono text-xl font-bold">{score.toString().padStart(6, "0")}</span>
+          </div>
+          <div className="text-xs text-cyan-500/50 tracking-widest">DATA INTEGRITY</div>
+        </div>
+
+        <div className="flex flex-col items-end gap-2">
+          <div className={`flex items-center gap-2 px-4 py-2 rounded border backdrop-blur-md ${timeLeft < 10 ? "bg-red-900/40 border-red-500/50 text-red-400 animate-pulse" : "bg-black/40 border-cyan-500/20 text-cyan-400"}`}>
+            <span className="font-mono text-2xl font-bold">{timeLeft}s</span>
+            <Zap className="h-4 w-4" />
+          </div>
+          <div className="text-xs text-cyan-500/50 tracking-widest">TIME REMAINING</div>
+        </div>
+      </div>
+
+      {/* Bottom Bar */}
+      <div className="flex justify-between items-end">
+        <div className="flex items-center gap-2 text-cyan-600/50">
+          <Cpu className="h-4 w-4" />
+          <span className="text-xs tracking-widest">LEVEL {level} / {TOTAL_LEVELS}</span>
+        </div>
+
+        <div className="flex gap-1">
+          {/* Progress Indicators */}
+          {Array.from({ length: TOTAL_LEVELS }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-1 w-8 rounded-full ${i < level ? "bg-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.5)]" : "bg-gray-800"}`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="w-full h-full flex flex-col">
-      {/* Canvas container */}
-      <div className="flex-1 relative bg-gradient-to-b from-blue-900 to-purple-900 rounded-lg overflow-hidden">
-        <Canvas shadows gl={{ antialias: true, alpha: false }}>
-          <Suspense fallback={<LoadingFallback />}>
-            {!isPaused && (
-              <GameScene
-                currentIsland={currentIsland}
-                onCrystalCollect={handleCrystalCollect}
-                gameTime={gameTime}
-              />
-            )}
-          </Suspense>
-        </Canvas>
+    <div className="w-full h-full relative bg-black">
+      <Canvas gl={{ antialias: true, toneMapping: THREE.ReinhardToneMapping, toneMappingExposure: 1.5 }}>
+        <Suspense fallback={<LoadingFallback />}>
+          <GameScene
+            gameState={gameState}
+            level={level}
+            nodes={nodes}
+            activeNodes={activeNodes}
+            onNodeActivate={handleNodeActivate}
+          />
+        </Suspense>
+      </Canvas>
 
-        {/* HUD - Top left: Game stats */}
-        <div className="absolute top-4 left-4 space-y-2">
-          <div className="bg-black/50 backdrop-blur-sm px-4 py-2 rounded-lg">
-            <p className="text-white text-sm font-semibold">
-              ⏱️ Time: {formatTime(gameTime)}
-            </p>
-          </div>
-          <div className="bg-black/50 backdrop-blur-sm px-4 py-2 rounded-lg flex items-center gap-2">
-            <Zap className="h-4 w-4 text-yellow-400" />
-            <p className="text-white text-sm font-semibold">
-              Crystals: {crystalsCollected}/{totalCrystals}
-            </p>
-          </div>
+      {/* UI Overlays */}
+      {gameState === "MENU" && <MenuOverlay />}
+      {gameState === "GAMEOVER" && <GameOverOverlay />}
+      {gameState === "COMPLETED" && <CompletedOverlay />}
+      {gameState === "PLAYING" && <HUD />}
+
+      {/* Pause Button */}
+      {gameState === "PLAYING" && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-auto z-50">
+          <Button
+            onClick={() => setGameState("PAUSED")}
+            className="rounded-full w-12 h-12 bg-black/40 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-900/30 backdrop-blur-md"
+          >
+            <Pause className="h-5 w-5" />
+          </Button>
         </div>
+      )}
 
-        {/* HUD - Top center: Island indicator */}
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full">
-          <p className="text-white text-sm font-semibold">
-            Island {currentIsland + 1} / {totalIslands}
-          </p>
+      {gameState === "PAUSED" && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50">
+          <Button
+            onClick={() => setGameState("PLAYING")}
+            className="bg-cyan-600 hover:bg-cyan-500 text-black font-bold px-8 py-4 rounded-full shadow-[0_0_20px_rgba(6,182,212,0.4)]"
+          >
+            <Play className="mr-2 h-5 w-5" /> RESUME
+          </Button>
         </div>
-
-        {/* Collection notification */}
-        {showCollectNotification && (
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-yellow-500/90 backdrop-blur-sm px-6 py-3 rounded-lg animate-bounce">
-            <p className="text-white text-lg font-bold">⚡ Crystal Collected! ⚡</p>
-          </div>
-        )}
-
-        {/* Pause overlay */}
-        {isPaused && (
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-white text-4xl font-bold mb-4">⏸️ PAUSED</p>
-              <p className="text-gray-300 text-lg">Click Play to resume</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Navigation buttons */}
-      <div className="flex items-center justify-center gap-3 mt-4 pb-4">
-        <Button
-          onClick={handlePrevIsland}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2"
-          disabled={isPaused}
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Previous
-        </Button>
-
-        <Button
-          onClick={handleReset}
-          className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2"
-        >
-          <RotateCcw className="h-4 w-4" />
-          Reset
-        </Button>
-
-        <Button
-          onClick={togglePause}
-          className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2"
-        >
-          {isPaused ? (
-            <>
-              <Play className="h-4 w-4" />
-              Play
-            </>
-          ) : (
-            <>
-              <Pause className="h-4 w-4" />
-              Pause
-            </>
-          )}
-        </Button>
-
-        <Button
-          onClick={handleNextIsland}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2"
-          disabled={isPaused}
-        >
-          Next
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <style jsx>{`
-        @keyframes bounce {
-          0%, 100% {
-            transform: translate(-50%, -50%) scale(1);
-          }
-          50% {
-            transform: translate(-50%, -50%) scale(1.1);
-          }
-        }
-
-        .animate-bounce {
-          animation: bounce 0.5s ease-in-out 3;
-        }
-      `}</style>
+      )}
     </div>
   );
 }
