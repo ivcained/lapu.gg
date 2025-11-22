@@ -20,7 +20,8 @@ import { encodeEntity, syncToRecs } from "@latticexyz/store-sync/recs";
  * for the source of this information.
  */
 import mudConfig from "contracts/mud.config";
-import IWorldAbi from "contracts/out/IWorld.sol/IWorld.abi.json";
+// @ts-expect-error - workspace import
+import IWorldAbi from "../../../contracts/out/IWorld.sol/IWorld.abi.json";
 import { share, Subject } from "rxjs";
 import {
   ClientConfig,
@@ -37,17 +38,7 @@ import { sdk } from "@farcaster/miniapp-sdk";
 
 import { getNetworkConfig } from "./getNetworkConfig";
 import { world } from "./world";
-
-// Helper to check if we're running in a Farcaster miniapp context
-const isMiniApp = () => {
-  if (typeof window === "undefined") return false;
-  const url = new URL(window.location.href);
-  return (
-    url.searchParams.get("miniApp") === "true" ||
-    window.parent !== window ||
-    navigator.userAgent.includes("Farcaster")
-  );
-};
+import { isMiniAppSync } from "../farcaster";
 
 export type SetupNetworkResult = Awaited<ReturnType<typeof setupNetwork>>;
 
@@ -74,7 +65,7 @@ export async function setupNetwork() {
   let walletClient;
   let accountAddress: Hex;
 
-  if (isMiniApp()) {
+  if (isMiniAppSync()) {
     // Use Farcaster wallet provider in miniapp context
     try {
       const provider = sdk.wallet.getEthereumProvider();
@@ -89,8 +80,12 @@ export async function setupNetwork() {
         console.log("[Farcaster]: Connected wallet address ->", accountAddress);
       } else {
         // Fall back to burner wallet if no accounts available
-        console.warn("[Farcaster]: No accounts available, falling back to burner wallet");
-        const burnerAccount = createBurnerAccount(networkConfig.privateKey as Hex);
+        console.warn(
+          "[Farcaster]: No accounts available, falling back to burner wallet"
+        );
+        const burnerAccount = createBurnerAccount(
+          networkConfig.privateKey as Hex
+        );
         walletClient = createWalletClient({
           ...clientOptions,
           account: burnerAccount,
@@ -98,8 +93,13 @@ export async function setupNetwork() {
         accountAddress = burnerAccount.address;
       }
     } catch (error) {
-      console.warn("[Farcaster]: Failed to get wallet provider, falling back to burner wallet", error);
-      const burnerAccount = createBurnerAccount(networkConfig.privateKey as Hex);
+      console.warn(
+        "[Farcaster]: Failed to get wallet provider, falling back to burner wallet",
+        error
+      );
+      const burnerAccount = createBurnerAccount(
+        networkConfig.privateKey as Hex
+      );
       walletClient = createWalletClient({
         ...clientOptions,
         account: burnerAccount,
@@ -149,11 +149,28 @@ export async function setupNetwork() {
     });
 
   /*
+   * Get Base Account wallet capabilities if in miniapp context
+   * This checks if the wallet supports paymaster and batch transactions
+   */
+  let walletCapabilities: WalletCapabilities = {};
+  if (isMiniApp()) {
+    try {
+      walletCapabilities = await getWalletCapabilities(
+        walletClient,
+        accountAddress
+      );
+      console.log("[Base Account]: Wallet capabilities ->", walletCapabilities);
+    } catch (error) {
+      console.warn("[Base Account]: Failed to get capabilities", error);
+    }
+  }
+
+  /*
    * If there is a faucet, request (test) ETH if you have
    * less than 1 ETH. Repeat every 20 seconds to ensure you don't
    * run out.
    */
-  if (networkConfig.faucetServiceUrl && !isMiniApp()) {
+  if (networkConfig.faucetServiceUrl && !isMiniAppSync()) {
     const address = accountAddress;
     console.info("[Dev Faucet]: Player address -> ", address);
 
@@ -190,5 +207,27 @@ export async function setupNetwork() {
     waitForTransaction,
     worldContract,
     write$: write$.asObservable().pipe(share()),
+    // Base Account features
+    baseAccount: {
+      capabilities: walletCapabilities,
+      sendBatchCalls: (calls: Parameters<typeof sendBatchCalls>[1]) =>
+        sendBatchCalls(walletClient, {
+          ...calls,
+          capabilities: walletCapabilities,
+        }),
+      batchContractWrites: (
+        writes: Parameters<typeof batchContractWrites>[1]["writes"],
+        usePaymaster = false
+      ) =>
+        batchContractWrites(walletClient, {
+          account: accountAddress,
+          chainId: networkConfig.chain.id,
+          writes,
+          usePaymaster,
+        }),
+      accountAddress,
+      isMiniApp: isMiniApp(),
+      config: BASE_ACCOUNT_CONFIG,
+    },
   };
 }

@@ -1,26 +1,15 @@
 import React from "react";
 import mudConfig from "contracts/mud.config";
 import ReactDOM from "react-dom/client";
-import { sdk } from "@farcaster/miniapp-sdk";
 
 import { App } from "./App";
 import { setup } from "./mud/setup";
+import { FarcasterProvider, signalReady } from "./farcaster";
 
 import "@/styles/index.css";
 
 import { MUDProvider } from "./MUDProvider";
-
-// Helper to check if we're running in a Farcaster miniapp context
-const isMiniApp = () => {
-  if (typeof window === "undefined") return false;
-  const url = new URL(window.location.href);
-  // Check for miniapp query param or if loaded in Farcaster client
-  return (
-    url.searchParams.get("miniApp") === "true" ||
-    window.parent !== window || // Loaded in iframe
-    navigator.userAgent.includes("Farcaster")
-  );
-};
+import { AuthProvider } from "./contexts/AuthContext";
 
 const rootElement = document.getElementById("react-root");
 if (!rootElement) throw new Error("React root not found");
@@ -30,22 +19,17 @@ const root = ReactDOM.createRoot(rootElement);
 setup().then(async (result) => {
   root.render(
     <React.StrictMode>
-      <MUDProvider value={result}>
-        <App />
-      </MUDProvider>
+      <FarcasterProvider>
+        <MUDProvider value={result}>
+          <App />
+        </MUDProvider>
+      </FarcasterProvider>
     </React.StrictMode>
   );
 
   // Signal to Farcaster that the app is ready to display
   // This hides the splash screen in the Farcaster client
-  if (isMiniApp()) {
-    try {
-      await sdk.actions.ready();
-      console.log("[Farcaster]: Mini app ready signal sent");
-    } catch (error) {
-      console.warn("[Farcaster]: Failed to send ready signal", error);
-    }
-  }
+  await signalReady();
 
   // https://vitejs.dev/guide/env-and-mode.html
   if (import.meta.env.DEV) {
