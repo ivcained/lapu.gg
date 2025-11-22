@@ -9,6 +9,7 @@ import { FarcasterProvider, signalReady } from "./farcaster";
 import "@/styles/index.css";
 
 import { MUDProvider } from "./MUDProvider";
+import { AuthProvider } from "./contexts/AuthContext";
 
 const rootElement = document.getElementById("react-root");
 if (!rootElement) throw new Error("React root not found");
