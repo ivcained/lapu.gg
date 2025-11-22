@@ -1,12 +1,12 @@
 import { Inventory } from "./inventory";
-import { NotificationSettings } from "./notifications";
+import { ResourcePanel } from "./resourcePanel";
 
 function GameUI() {
   return (
     <div className="interface">
       <GameControls />
       <Inventory />
-      <NotificationSettings />
+      <ResourcePanel />
     </div>
   );
 }

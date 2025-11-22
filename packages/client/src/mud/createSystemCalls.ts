@@ -61,96 +61,25 @@ export function createSystemCalls(
     await waitForTransaction(tx);
   };
 
-  /**
-   * Example: Batch multiple facilities using Base Account
-   * This demonstrates how to use Base Account's batch transaction feature
-   * to build multiple facilities in a single atomic transaction
-   *
-   * @param facilities - Array of facility configurations to build
-   * @param usePaymaster - Whether to use paymaster for gasless transactions
-   * @returns The batch transaction ID
-   */
-  const batchBuildFacilities = async (
-    facilities: Array<{
-      entityTypeId: number;
-      x: number;
-      y: number;
-      z: number;
-      yaw: number;
-    }>,
-    usePaymaster = false
-  ) => {
-    if (!baseAccount.isMiniApp) {
-      throw new Error(
-        "Batch transactions require Base Account (Mini App context)"
-      );
-    }
-
-    // Import the ABI from the workspace
-    const IWorldAbi = (
-      await import("../../../../contracts/out/IWorld.sol/IWorld.abi.json")
-    ).default;
-
-    // Prepare batch writes
-    const writes = facilities.map((facility) => ({
-      address: worldContract.address,
-      abi: IWorldAbi,
-      functionName: "buildFacility",
-      args: [
-        facility.entityTypeId,
-        facility.x,
-        facility.y,
-        facility.z,
-        facility.yaw,
-      ],
-    }));
-
-    // Send as batch transaction
-    const batchId = await baseAccount.batchContractWrites(writes, usePaymaster);
-
-    console.log(
-      `[Base Account]: Batched ${facilities.length} facility builds`,
-      batchId
-    );
-
-    return batchId;
+  const initializePlayer = async () => {
+    const tx = await worldContract.write.initializePlayer();
+    await waitForTransaction(tx);
   };
 
-  /**
-   * Example: Batch multiple increments
-   * Demonstrates batching multiple calls to the increment function
-   */
-  const batchIncrement = async (count: number, usePaymaster = false) => {
-    if (!baseAccount.isMiniApp) {
-      throw new Error(
-        "Batch transactions require Base Account (Mini App context)"
-      );
-    }
+  const claimIncome = async () => {
+    const tx = await worldContract.write.claimIncome();
+    await waitForTransaction(tx);
+  };
 
-    const IWorldAbi = (
-      await import("../../../../contracts/out/IWorld.sol/IWorld.abi.json")
-    ).default;
-
-    // Create array of increment calls
-    const writes = Array.from({ length: count }, () => ({
-      address: worldContract.address,
-      abi: IWorldAbi,
-      functionName: "increment",
-      args: [],
-    }));
-
-    const batchId = await baseAccount.batchContractWrites(writes, usePaymaster);
-
-    console.log(`[Base Account]: Batched ${count} increments`, batchId);
-
-    return batchId;
+  const getPendingIncome = async (playerAddress: string) => {
+    return await worldContract.read.getPendingIncome([playerAddress]);
   };
 
   return {
     increment,
     mudBuildFacility,
-    // Base Account batch functions
-    batchBuildFacilities,
-    batchIncrement,
+    initializePlayer,
+    claimIncome,
+    getPendingIncome,
   };
 }
