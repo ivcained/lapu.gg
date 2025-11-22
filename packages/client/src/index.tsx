@@ -38,7 +38,9 @@ setup().then(async (result) => {
         config={{
           appearance: {
             name: import.meta.env.VITE_APP_NAME || "Lapu",
-            logo: import.meta.env.VITE_APP_ICON_URL || "https://lapu.gg/icons/gravity.webp",
+            logo:
+              import.meta.env.VITE_APP_ICON_URL ||
+              "https://lapu.gg/icons/gravity.webp",
           },
         }}
       >

@@ -8,9 +8,10 @@ export const minikitConfig = {
     // These values should be generated using the Warpcast Mini App Manifest Tool
     // Visit: https://warpcast.com/~/developers/mini-apps
     // Or use the Base Build tool at: https://base.dev/preview
-    header: "eyJmaWQiOjAsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIn0",
+    header:
+      "eyJmaWQiOjAsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIn0",
     payload: "eyJkb21haW4iOiJsYXB1LmdnIn0",
-    signature: "PLACEHOLDER_SIGNATURE" // Replace with actual signature from Warpcast tool
+    signature: "PLACEHOLDER_SIGNATURE", // Replace with actual signature from Warpcast tool
   },
   miniapp: {
     version: "1",
@@ -25,7 +26,8 @@ export const minikitConfig = {
 
     // Optional metadata for better discoverability
     subtitle: "Build your floating city in the sky",
-    description: "A blockchain-based city-building game where you create and manage your own floating city",
+    description:
+      "A blockchain-based city-building game where you create and manage your own floating city",
     primaryCategory: "games" as const,
     tags: ["games", "blockchain", "city-building", "base", "mud"],
     heroImageUrl: `${ROOT_URL}/icons/gravity.webp`,
