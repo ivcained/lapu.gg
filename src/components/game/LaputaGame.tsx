@@ -5,214 +5,261 @@ import {
   OrbitControls,
   PerspectiveCamera,
   Html,
-  Stars,
   Float,
   Text,
-  MeshTransmissionMaterial,
-  Trail,
+  useTexture,
+  Sky,
+  Cloud,
+  Stars,
 } from "@react-three/drei";
 import { useRef, useState, Suspense, useEffect, useMemo } from "react";
 import * as THREE from "three";
+import { useMiniApp } from "@neynar/react";
 import { Button } from "../ui/Button";
-import { Play, Pause, RotateCcw, Zap, Activity, Cpu, ShieldCheck } from "lucide-react";
-
-// --- Game Constants ---
-const TOTAL_LEVELS = 5;
-const INITIAL_TIME = 60;
+import { Zap, Hammer, Users, MapPin, Plus, ArrowUpCircle } from "lucide-react";
 
 // --- Types ---
-type GameState = "MENU" | "PLAYING" | "PAUSED" | "COMPLETED" | "GAMEOVER";
+type ResourceType = "AETHER" | "STONE";
 
-interface UplinkNodeProps {
-  position: [number, number, number];
-  isActive: boolean;
-  onActivate: () => void;
+interface GameState {
+  resources: {
+    aether: number;
+    stone: number;
+  };
+  buildings: {
+    houseLevel: number;
+    crystalLevel: number;
+  };
 }
+
+interface Neighbor {
+  fid: number;
+  username: string;
+  position: [number, number, number];
+  color: string;
+}
+
+// --- Mock Data ---
+const MOCK_NEIGHBORS: Neighbor[] = [
+  { fid: 1, username: "dwr.eth", position: [-15, 2, -10], color: "#ff8888" },
+  { fid: 2, username: "v", position: [15, -3, -12], color: "#88ff88" },
+  { fid: 3, username: "horsefacts", position: [0, 8, -20], color: "#8888ff" },
+];
 
 // --- Components ---
 
 /**
- * UplinkNode: The interactive target the player must click.
+ * ResourceNode: Interactive object to gather resources
  */
-function UplinkNode({ position, isActive, onActivate }: UplinkNodeProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
+function ResourceNode({
+  type,
+  position,
+  onClick,
+}: {
+  type: ResourceType;
+  position: [number, number, number];
+  onClick: () => void;
+}) {
+  const meshRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
 
   useFrame((state) => {
     if (meshRef.current) {
-      // Pulse animation
-      const scale = hovered ? 1.2 : 1;
-      const pulse = isActive ? 1 : Math.sin(state.clock.elapsedTime * 5) * 0.1 + 1;
-      meshRef.current.scale.lerp(new THREE.Vector3(scale * pulse, scale * pulse, scale * pulse), 0.1);
+      if (hovered) {
+        meshRef.current.scale.lerp(new THREE.Vector3(1.2, 1.2, 1.2), 0.1);
+      } else {
+        meshRef.current.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
+      }
 
-      // Rotation
-      meshRef.current.rotation.x += 0.02;
-      meshRef.current.rotation.y += 0.02;
+      if (type === "AETHER") {
+        meshRef.current.rotation.y += 0.01;
+        meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.2;
+      }
     }
   });
 
   return (
-    <group position={position}>
-      <mesh
-        ref={meshRef}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (!isActive) onActivate();
-        }}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-      >
-        <octahedronGeometry args={[0.3, 0]} />
-        <meshStandardMaterial
-          color={isActive ? "#00ffff" : "#ff0055"}
-          emissive={isActive ? "#00ffff" : "#ff0055"}
-          emissiveIntensity={isActive ? 2 : 0.5}
-          toneMapped={false}
-        />
-      </mesh>
-      {/* Connection Line to center */}
-      <line>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={2}
-            array={new Float32Array([0, 0, 0, -position[0], -position[1], -position[2]])}
-            itemSize={3}
+    <group
+      ref={meshRef}
+      position={position}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      onPointerOver={() => setHovered(true)}
+      onPointerOut={() => setHovered(false)}
+    >
+      {type === "AETHER" ? (
+        <mesh>
+          <octahedronGeometry args={[0.5, 0]} />
+          <meshStandardMaterial
+            color="#00ffff"
+            emissive="#00ffff"
+            emissiveIntensity={0.8}
+            transparent
+            opacity={0.8}
           />
-        </bufferGeometry>
-        <lineBasicMaterial color={isActive ? "#00ffff" : "#330011"} transparent opacity={0.3} />
-      </line>
+        </mesh>
+      ) : (
+        <mesh rotation={[Math.random(), Math.random(), Math.random()]}>
+          <dodecahedronGeometry args={[0.6, 0]} />
+          <meshStandardMaterial color="#888888" roughness={0.9} />
+        </mesh>
+      )}
+
+      {/* Label on hover */}
+      {hovered && (
+        <Html position={[0, 1, 0]} center>
+          <div className="bg-black/70 text-white text-xs px-2 py-1 rounded-full whitespace-nowrap pointer-events-none">
+            Click to Gather {type === "AETHER" ? "Aether" : "Stone"}
+          </div>
+        </Html>
+      )}
     </group>
   );
 }
 
 /**
- * DataCluster: The central procedural object representing a level.
+ * SkyIsland: The player's main base
  */
-function DataCluster({
-  level,
-  nodes,
-  activeNodes,
-  onNodeActivate,
-}: {
-  level: number;
-  nodes: [number, number, number][];
-  activeNodes: boolean[];
-  onNodeActivate: (index: number) => void;
-}) {
+function SkyIsland({ houseLevel }: { houseLevel: number }) {
+  return (
+    <group>
+      {/* Main Grass Platform */}
+      <mesh receiveShadow position={[0, -0.5, 0]}>
+        <cylinderGeometry args={[4, 3, 2, 8]} />
+        <meshStandardMaterial color="#4ade80" roughness={0.8} />
+      </mesh>
+
+      {/* Rocky Base */}
+      <mesh position={[0, -2, 0]}>
+        <coneGeometry args={[3, 2, 8]} />
+        <meshStandardMaterial color="#57534e" roughness={1} />
+      </mesh>
+
+      {/* House (Changes with level) */}
+      <group position={[0, 0.5, 0]}>
+        {/* Base House */}
+        <mesh position={[0, 0.5, 0]} castShadow>
+          <boxGeometry args={[1.5, 1, 1.5]} />
+          <meshStandardMaterial color="#fcd34d" />
+        </mesh>
+        <mesh position={[0, 1.5, 0]} castShadow>
+          <coneGeometry args={[1.2, 1, 4]} rotation={[0, Math.PI / 4, 0]} />
+          <meshStandardMaterial color="#ef4444" />
+        </mesh>
+
+        {/* Level 2 Extension */}
+        {houseLevel >= 2 && (
+          <mesh position={[1, 0.25, 0]} castShadow>
+            <boxGeometry args={[0.8, 0.8, 0.8]} />
+            <meshStandardMaterial color="#fcd34d" />
+          </mesh>
+        )}
+
+        {/* Level 3 Tower */}
+        {houseLevel >= 3 && (
+          <group position={[-1, 1, -0.5]}>
+            <mesh castShadow>
+              <cylinderGeometry args={[0.3, 0.4, 2, 8]} />
+              <meshStandardMaterial color="#94a3b8" />
+            </mesh>
+            <mesh position={[0, 1.2, 0]}>
+              <coneGeometry args={[0.5, 0.8, 8]} />
+              <meshStandardMaterial color="#3b82f6" />
+            </mesh>
+          </group>
+        )}
+      </group>
+
+      {/* Decor: Trees */}
+      <group position={[-2, 0.5, 1]}>
+        <mesh position={[0, 0.25, 0]}>
+          <cylinderGeometry args={[0.1, 0.15, 0.5]} />
+          <meshStandardMaterial color="#78350f" />
+        </mesh>
+        <mesh position={[0, 0.8, 0]}>
+          <dodecahedronGeometry args={[0.4]} />
+          <meshStandardMaterial color="#166534" />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+/**
+ * NeighborIsland: Represents other players in the distance
+ */
+function NeighborIsland({ neighbor }: { neighbor: Neighbor }) {
   const groupRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
     if (groupRef.current) {
-      // Slow rotation of the entire cluster
-      groupRef.current.rotation.y = state.clock.elapsedTime * 0.05;
+      // Gentle floating
+      groupRef.current.position.y = neighbor.position[1] + Math.sin(state.clock.elapsedTime + neighbor.fid) * 0.5;
     }
   });
 
-  // Procedural geometry based on level
-  const CoreGeometry = useMemo(() => {
-    if (level % 3 === 0) return <icosahedronGeometry args={[1.5, 0]} />;
-    if (level % 3 === 1) return <dodecahedronGeometry args={[1.5, 0]} />;
-    return <octahedronGeometry args={[1.5, 0]} />;
-  }, [level]);
-
   return (
-    <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
-      <group ref={groupRef}>
-        {/* Central Core */}
-        <mesh>
-          {CoreGeometry}
-          <meshPhysicalMaterial
-            color="#000000"
-            roughness={0.2}
-            metalness={1}
-            emissive="#001133"
-            emissiveIntensity={0.2}
-            wireframe
-          />
-        </mesh>
+    <group ref={groupRef} position={neighbor.position}>
+      {/* Distant Island Mesh */}
+      <mesh>
+        <cylinderGeometry args={[2, 1, 1, 6]} />
+        <meshStandardMaterial color={neighbor.color} />
+      </mesh>
 
-        {/* Inner Glowing Core */}
-        <mesh>
-          <sphereGeometry args={[0.8, 16, 16]} />
-          <meshBasicMaterial color="#00ffff" wireframe transparent opacity={0.1} />
-        </mesh>
-
-        {/* Orbiting Rings */}
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[2.5, 0.02, 16, 100]} />
-          <meshBasicMaterial color="#00ffff" transparent opacity={0.3} />
-        </mesh>
-        <mesh rotation={[0, 0, Math.PI / 4]}>
-          <torusGeometry args={[3, 0.02, 16, 100]} />
-          <meshBasicMaterial color="#ff00ff" transparent opacity={0.2} />
-        </mesh>
-
-        {/* Interactive Nodes */}
-        {nodes.map((pos, idx) => (
-          <UplinkNode
-            key={idx}
-            position={pos}
-            isActive={activeNodes[idx]}
-            onActivate={() => onNodeActivate(idx)}
-          />
-        ))}
-      </group>
-    </Float>
+      {/* Username Label */}
+      <Html position={[0, 2, 0]} center distanceFactor={15}>
+        <div className="flex flex-col items-center">
+          <div className="w-8 h-8 rounded-full bg-white border-2 border-blue-500 overflow-hidden mb-1">
+            {/* Placeholder Avatar */}
+            <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-400" />
+          </div>
+          <div className="bg-black/50 text-white text-xs px-2 py-0.5 rounded backdrop-blur-sm">
+            @{neighbor.username}
+          </div>
+        </div>
+      </Html>
+    </group>
   );
 }
 
 /**
- * GameScene: Manages the 3D world.
+ * GameScene: The main 3D environment
  */
 function GameScene({
   gameState,
-  level,
-  nodes,
-  activeNodes,
-  onNodeActivate,
+  onGather,
 }: {
   gameState: GameState;
-  level: number;
-  nodes: [number, number, number][];
-  activeNodes: boolean[];
-  onNodeActivate: (index: number) => void;
+  onGather: (type: ResourceType) => void;
 }) {
   return (
     <>
-      <PerspectiveCamera makeDefault position={[0, 0, 8]} />
-      <OrbitControls enablePan={false} minDistance={5} maxDistance={15} autoRotate={gameState === "MENU"} autoRotateSpeed={0.5} />
-
-      {/* Lighting */}
-      <ambientLight intensity={0.2} />
-      <pointLight position={[10, 10, 10]} intensity={1} color="#00ffff" />
-      <pointLight position={[-10, -10, -10]} intensity={1} color="#ff00ff" />
+      <PerspectiveCamera makeDefault position={[0, 5, 10]} />
+      <OrbitControls minDistance={5} maxDistance={20} maxPolarAngle={Math.PI / 2 - 0.1} />
 
       {/* Environment */}
-      <Stars radius={50} depth={50} count={3000} factor={4} saturation={0} fade speed={1} />
+      <Sky sunPosition={[100, 20, 100]} turbidity={0.5} rayleigh={0.5} />
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[10, 20, 10]} intensity={1.5} castShadow shadow-mapSize={[1024, 1024]} />
+      <Cloud opacity={0.5} speed={0.4} width={10} depth={1.5} segments={20} position={[0, 10, -10]} />
+      <Cloud opacity={0.3} speed={0.3} width={10} depth={1.5} segments={20} position={[10, 5, -15]} />
 
-      {/* Game Object */}
-      <DataCluster
-        level={level}
-        nodes={nodes}
-        activeNodes={activeNodes}
-        onNodeActivate={onNodeActivate}
-      />
+      {/* Main Island */}
+      <Float speed={1} rotationIntensity={0.1} floatIntensity={0.2}>
+        <SkyIsland houseLevel={gameState.buildings.houseLevel} />
 
-      {/* Background Grid (Visual only) */}
-      <gridHelper args={[50, 50, 0x111111, 0x050505]} position={[0, -5, 0]} />
+        {/* Resources */}
+        <ResourceNode type="AETHER" position={[2, 1, 0]} onClick={() => onGather("AETHER")} />
+        <ResourceNode type="STONE" position={[-1.5, 0.5, -1.5]} onClick={() => onGather("STONE")} />
+      </Float>
+
+      {/* Neighbors */}
+      {MOCK_NEIGHBORS.map((neighbor) => (
+        <NeighborIsland key={neighbor.fid} neighbor={neighbor} />
+      ))}
     </>
-  );
-}
-
-/**
- * Loading Fallback
- */
-function LoadingFallback() {
-  return (
-    <Html center>
-      <div className="text-cyan-500 font-mono text-sm animate-pulse">LOADING ASSETS...</div>
-    </Html>
   );
 }
 
@@ -220,231 +267,140 @@ function LoadingFallback() {
  * Main Game Component
  */
 export default function LaputaGame() {
-  // --- State ---
-  const [gameState, setGameState] = useState<GameState>("MENU");
-  const [level, setLevel] = useState(1);
-  const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(INITIAL_TIME);
+  const { user } = useMiniApp(); // Get Farcaster User
+  const [gameState, setGameState] = useState<GameState>({
+    resources: { aether: 0, stone: 0 },
+    buildings: { houseLevel: 1, crystalLevel: 1 },
+  });
+  const [notification, setNotification] = useState<{ text: string; id: number } | null>(null);
 
-  // Level Data
-  const [nodes, setNodes] = useState<[number, number, number][]>([]);
-  const [activeNodes, setActiveNodes] = useState<boolean[]>([]);
-
-  // --- Audio (Simulated) ---
-  const playSound = (type: "click" | "success" | "fail") => {
-    // In a real app, use Audio API. Here we just log or use visual feedback.
-    // console.log(`Audio: ${type}`);
-  };
-
-  // --- Game Logic ---
-
-  // Generate Level
-  const generateLevel = (lvl: number) => {
-    const nodeCount = 3 + lvl; // Increase difficulty
-    const newNodes: [number, number, number][] = [];
-    for (let i = 0; i < nodeCount; i++) {
-      // Random points on a sphere surface
-      const phi = Math.acos(-1 + (2 * i) / nodeCount);
-      const theta = Math.sqrt(nodeCount * Math.PI) * phi;
-      const r = 2; // Radius from center
-
-      newNodes.push([
-        r * Math.cos(theta) * Math.sin(phi),
-        r * Math.sin(theta) * Math.sin(phi),
-        r * Math.cos(phi),
-      ]);
-    }
-    setNodes(newNodes);
-    setActiveNodes(new Array(nodeCount).fill(false));
-  };
-
-  // Start Game
-  const startGame = () => {
-    setGameState("PLAYING");
-    setLevel(1);
-    setScore(0);
-    setTimeLeft(INITIAL_TIME);
-    generateLevel(1);
-  };
-
-  // Next Level
-  const nextLevel = () => {
-    if (level >= TOTAL_LEVELS) {
-      setGameState("COMPLETED");
-    } else {
-      setLevel((prev) => prev + 1);
-      setTimeLeft((prev) => prev + 15); // Bonus time
-      generateLevel(level + 1);
-      playSound("success");
-    }
-  };
-
-  // Node Activation
-  const handleNodeActivate = (index: number) => {
-    if (gameState !== "PLAYING") return;
-
-    const newActive = [...activeNodes];
-    newActive[index] = true;
-    setActiveNodes(newActive);
-    setScore((prev) => prev + 100);
-    playSound("click");
-
-    // Check if level complete
-    if (newActive.every((n) => n)) {
-      setTimeout(nextLevel, 500); // Delay for effect
-    }
-  };
-
-  // Timer
+  // Passive Resource Generation
   useEffect(() => {
-    if (gameState === "PLAYING") {
-      const timer = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            setGameState("GAMEOVER");
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(timer);
+    const timer = setInterval(() => {
+      setGameState((prev) => ({
+        ...prev,
+        resources: {
+          ...prev.resources,
+          aether: prev.resources.aether + prev.buildings.crystalLevel,
+        },
+      }));
+    }, 2000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Actions
+  const handleGather = (type: ResourceType) => {
+    const amount = type === "AETHER" ? 5 : 3;
+    setGameState((prev) => ({
+      ...prev,
+      resources: {
+        ...prev.resources,
+        aether: type === "AETHER" ? prev.resources.aether + amount : prev.resources.aether,
+        stone: type === "STONE" ? prev.resources.stone + amount : prev.resources.stone,
+      },
+    }));
+    showNotification(`+${amount} ${type === "AETHER" ? "Aether" : "Stone"}`);
+  };
+
+  const handleUpgradeHouse = () => {
+    const cost = gameState.buildings.houseLevel * 50;
+    if (gameState.resources.stone >= cost) {
+      setGameState((prev) => ({
+        ...prev,
+        resources: { ...prev.resources, stone: prev.resources.stone - cost },
+        buildings: { ...prev.buildings, houseLevel: prev.buildings.houseLevel + 1 },
+      }));
+      showNotification("House Upgraded!");
+    } else {
+      showNotification("Not enough Stone!");
     }
-  }, [gameState]);
+  };
 
-  // --- UI Components ---
-
-  const MenuOverlay = () => (
-    <div className="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-50">
-      <div className="text-center space-y-6 p-8 border border-cyan-500/30 bg-black/50 rounded-lg shadow-[0_0_30px_rgba(6,182,212,0.2)] max-w-md w-full">
-        <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 tracking-tighter">
-          CYBER-LINK
-        </h1>
-        <p className="text-cyan-100/70 text-sm">
-          Synchronize the data nodes before the system crashes.
-          <br />
-          Click <span className="text-red-400">RED</span> nodes to stabilize them.
-        </p>
-        <Button
-          onClick={startGame}
-          className="w-full h-14 text-lg font-bold bg-cyan-600 hover:bg-cyan-500 text-black shadow-[0_0_15px_rgba(6,182,212,0.5)] transition-all hover:scale-105"
-        >
-          <Play className="mr-2 h-5 w-5" /> INITIALIZE LINK
-        </Button>
-      </div>
-    </div>
-  );
-
-  const GameOverOverlay = () => (
-    <div className="absolute inset-0 flex items-center justify-center bg-red-950/80 backdrop-blur-sm z-50">
-      <div className="text-center space-y-6 p-8 border border-red-500/30 bg-black/50 rounded-lg">
-        <h2 className="text-3xl font-bold text-red-500 tracking-widest">CONNECTION LOST</h2>
-        <div className="text-2xl font-mono text-white">SCORE: {score}</div>
-        <Button
-          onClick={startGame}
-          className="w-full h-12 bg-red-600 hover:bg-red-500 text-white"
-        >
-          <RotateCcw className="mr-2 h-4 w-4" /> REBOOT SYSTEM
-        </Button>
-      </div>
-    </div>
-  );
-
-  const CompletedOverlay = () => (
-    <div className="absolute inset-0 flex items-center justify-center bg-green-950/80 backdrop-blur-sm z-50">
-      <div className="text-center space-y-6 p-8 border border-green-500/30 bg-black/50 rounded-lg">
-        <h2 className="text-3xl font-bold text-green-400 tracking-widest">SYSTEM SYNCHRONIZED</h2>
-        <div className="text-2xl font-mono text-white">FINAL SCORE: {score}</div>
-        <Button
-          onClick={startGame}
-          className="w-full h-12 bg-green-600 hover:bg-green-500 text-white"
-        >
-          <RotateCcw className="mr-2 h-4 w-4" /> NEW SESSION
-        </Button>
-      </div>
-    </div>
-  );
-
-  const HUD = () => (
-    <div className="absolute inset-0 pointer-events-none p-6 flex flex-col justify-between z-40">
-      {/* Top Bar */}
-      <div className="flex justify-between items-start">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-cyan-400 bg-black/40 backdrop-blur-md px-4 py-2 rounded border border-cyan-500/20">
-            <Activity className="h-4 w-4 animate-pulse" />
-            <span className="font-mono text-xl font-bold">{score.toString().padStart(6, "0")}</span>
-          </div>
-          <div className="text-xs text-cyan-500/50 tracking-widest">DATA INTEGRITY</div>
-        </div>
-
-        <div className="flex flex-col items-end gap-2">
-          <div className={`flex items-center gap-2 px-4 py-2 rounded border backdrop-blur-md ${timeLeft < 10 ? "bg-red-900/40 border-red-500/50 text-red-400 animate-pulse" : "bg-black/40 border-cyan-500/20 text-cyan-400"}`}>
-            <span className="font-mono text-2xl font-bold">{timeLeft}s</span>
-            <Zap className="h-4 w-4" />
-          </div>
-          <div className="text-xs text-cyan-500/50 tracking-widest">TIME REMAINING</div>
-        </div>
-      </div>
-
-      {/* Bottom Bar */}
-      <div className="flex justify-between items-end">
-        <div className="flex items-center gap-2 text-cyan-600/50">
-          <Cpu className="h-4 w-4" />
-          <span className="text-xs tracking-widest">LEVEL {level} / {TOTAL_LEVELS}</span>
-        </div>
-
-        <div className="flex gap-1">
-          {/* Progress Indicators */}
-          {Array.from({ length: TOTAL_LEVELS }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-1 w-8 rounded-full ${i < level ? "bg-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.5)]" : "bg-gray-800"}`}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+  const showNotification = (text: string) => {
+    setNotification({ text, id: Date.now() });
+    setTimeout(() => setNotification(null), 2000);
+  };
 
   return (
-    <div className="w-full h-full relative bg-black">
-      <Canvas gl={{ antialias: true, toneMapping: THREE.ReinhardToneMapping, toneMappingExposure: 1.5 }}>
-        <Suspense fallback={<LoadingFallback />}>
-          <GameScene
-            gameState={gameState}
-            level={level}
-            nodes={nodes}
-            activeNodes={activeNodes}
-            onNodeActivate={handleNodeActivate}
-          />
+    <div className="w-full h-full relative">
+      <Canvas shadows gl={{ antialias: true }}>
+        <Suspense fallback={null}>
+          <GameScene gameState={gameState} onGather={handleGather} />
         </Suspense>
       </Canvas>
 
-      {/* UI Overlays */}
-      {gameState === "MENU" && <MenuOverlay />}
-      {gameState === "GAMEOVER" && <GameOverOverlay />}
-      {gameState === "COMPLETED" && <CompletedOverlay />}
-      {gameState === "PLAYING" && <HUD />}
+      {/* HUD */}
+      <div className="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between">
+        {/* Top Bar: Resources */}
+        <div className="flex justify-between items-start">
+          <div className="flex gap-4">
+            <div className="bg-white/80 backdrop-blur-md rounded-xl p-3 flex items-center gap-3 shadow-lg border border-blue-100">
+              <div className="bg-cyan-100 p-2 rounded-lg">
+                <Zap className="h-5 w-5 text-cyan-600" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 font-bold uppercase">Aether</p>
+                <p className="text-xl font-black text-slate-800">{gameState.resources.aether}</p>
+              </div>
+            </div>
 
-      {/* Pause Button */}
-      {gameState === "PLAYING" && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-auto z-50">
+            <div className="bg-white/80 backdrop-blur-md rounded-xl p-3 flex items-center gap-3 shadow-lg border border-blue-100">
+              <div className="bg-stone-200 p-2 rounded-lg">
+                <Hammer className="h-5 w-5 text-stone-600" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 font-bold uppercase">Stone</p>
+                <p className="text-xl font-black text-slate-800">{gameState.resources.stone}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* User Profile */}
+          <div className="bg-white/80 backdrop-blur-md rounded-full pl-2 pr-4 py-2 flex items-center gap-3 shadow-lg border border-blue-100">
+            {user?.pfpUrl ? (
+              <img src={user.pfpUrl} alt="pfp" className="w-8 h-8 rounded-full border-2 border-blue-400" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-blue-400" />
+            )}
+            <span className="font-bold text-slate-700">@{user?.username || "Guest"}</span>
+          </div>
+        </div>
+
+        {/* Bottom Bar: Actions */}
+        <div className="flex justify-center gap-4 pointer-events-auto pb-6">
           <Button
-            onClick={() => setGameState("PAUSED")}
-            className="rounded-full w-12 h-12 bg-black/40 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-900/30 backdrop-blur-md"
+            onClick={handleUpgradeHouse}
+            className="bg-white hover:bg-blue-50 text-slate-700 border-2 border-blue-200 shadow-xl rounded-2xl h-auto py-3 px-6 flex flex-col items-center gap-1 transition-transform hover:-translate-y-1"
           >
-            <Pause className="h-5 w-5" />
+            <div className="flex items-center gap-2">
+              <ArrowUpCircle className="h-5 w-5 text-blue-500" />
+              <span className="font-bold">Upgrade House</span>
+            </div>
+            <span className="text-xs text-slate-400 font-semibold">
+              Cost: {gameState.buildings.houseLevel * 50} Stone
+            </span>
+          </Button>
+
+          <Button
+            className="bg-white hover:bg-purple-50 text-slate-700 border-2 border-purple-200 shadow-xl rounded-2xl h-auto py-3 px-6 flex flex-col items-center gap-1 transition-transform hover:-translate-y-1"
+          >
+            <div className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-purple-500" />
+              <span className="font-bold">Visit Neighbor</span>
+            </div>
+            <span className="text-xs text-slate-400 font-semibold">
+              {MOCK_NEIGHBORS.length} Online
+            </span>
           </Button>
         </div>
-      )}
+      </div>
 
-      {gameState === "PAUSED" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50">
-          <Button
-            onClick={() => setGameState("PLAYING")}
-            className="bg-cyan-600 hover:bg-cyan-500 text-black font-bold px-8 py-4 rounded-full shadow-[0_0_20px_rgba(6,182,212,0.4)]"
-          >
-            <Play className="mr-2 h-5 w-5" /> RESUME
-          </Button>
+      {/* Notification Toast */}
+      {notification && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+          <div className="bg-white/90 backdrop-blur-md px-6 py-3 rounded-full shadow-xl border-2 border-yellow-300 animate-bounce">
+            <p className="text-lg font-bold text-slate-800">{notification.text}</p>
+          </div>
         </div>
       )}
     </div>
