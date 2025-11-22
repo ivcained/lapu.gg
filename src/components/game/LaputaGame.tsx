@@ -105,17 +105,20 @@ function ResourceNode({
           <dodecahedronGeometry args={[0.6, 0]} />
           <meshStandardMaterial color="#888888" roughness={0.9} />
         </mesh>
-      )}
+      )
+      }
 
       {/* Label on hover */}
-      {hovered && (
-        <Html position={[0, 1, 0]} center>
-          <div className="bg-black/70 text-white text-xs px-2 py-1 rounded-full whitespace-nowrap pointer-events-none">
-            Click to Gather {type === "AETHER" ? "Aether" : "Stone"}
-          </div>
-        </Html>
-      )}
-    </group>
+      {
+        hovered && (
+          <Html position={[0, 1, 0]} center>
+            <div className="bg-black/70 text-white text-xs px-2 py-1 rounded-full whitespace-nowrap pointer-events-none">
+              Click to Gather {type === "AETHER" ? "Aether" : "Stone"}
+            </div>
+          </Html>
+        )
+      }
+    </group >
   );
 }
 

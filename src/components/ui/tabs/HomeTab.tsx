@@ -4,9 +4,8 @@ import { useEffect, useState } from "react";
 import { useMiniApp } from "@neynar/react";
 import { useNeynarUser } from "~/hooks/useNeynarUser";
 import { Button } from "../Button";
-import { Sparkles, Mountain } from "lucide-react";
+import { Mountain } from "lucide-react";
 import { useRouter } from "next/navigation";
-import sdk from "@farcaster/miniapp-sdk";
 
 /**
  * HomeTab component displays the main squat tracking interface.
@@ -68,16 +67,6 @@ export function HomeTab() {
     router.push(squatUrl);
   };
 
-  const handleJoinClub = async () => {
-    // Open the /jessesquats channel in external browser (SDK required for external URLs)
-    const channelUrl = "https://farcaster.xyz/";
-
-    try {
-      await sdk.actions.openUrl(channelUrl);
-    } catch (error) {
-      console.error("Failed to open channel:", error);
-    }
-  };
 
   if (loading) {
     return (
@@ -95,20 +84,18 @@ export function HomeTab() {
 
   return (
     <div className="flex flex-col items-center px-4 py-6 min-h-screen overflow-y-auto pb-8">
-      {/* Hero Section with Squat Animation */}
+      {/* Hero Section with Laputa Island */}
       <div className="text-center mb-8">
         <div className="relative w-48 h-48 mx-auto mb-6">
-          {/* Animated jesse-alpha image - using CSS animation */}
-          <div className="squat-animation">
-            <img
-              src="/jesse-alpha.png"
-              alt="Jesse Squat Animation"
-              className="w-full h-full object-contain"
-            />
-          </div>
+          {/* Laputa Floating Island */}
+          <img
+            src="/laputa-island.svg"
+            alt="Laputa Floating Island"
+            className="w-full h-full object-contain"
+          />
 
           {/* Glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-b from-orange-500/20 to-transparent rounded-full blur-3xl -z-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl -z-10"></div>
         </div>
 
         <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
@@ -147,23 +134,6 @@ export function HomeTab() {
         </div>
       )}
 
-      {/* Join the Channel Button */}
-      <div className="w-full max-w-md mb-4">
-        <Button
-          onClick={handleJoinClub}
-          className="w-full h-14 text-base font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg shadow-purple-500/50 transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
-        >
-          <Sparkles className="h-5 w-5" />
-          <span>Join /lapu Channel</span>
-        </Button>
-        <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-2">
-          <span className="font-semibold text-purple-600 dark:text-purple-400">
-            Connect with the community
-          </span>{" "}
-          • Share your progress
-        </p>
-      </div>
-
       {/* Laputa Game Button */}
       <div className="w-full max-w-md mb-4">
         <Button
@@ -180,14 +150,6 @@ export function HomeTab() {
           • Navigate between islands
         </p>
       </div>
-
-      {/* Squat Off Button */}
-      <Button
-        onClick={handleSquatOff}
-        className="w-full max-w-md mb-8 h-16 text-xl font-bold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg shadow-orange-500/50 transition-all duration-300 hover:scale-105"
-      >
-        💪 lapu Off
-      </Button>
 
       {/* Leaderboard Preview */}
       {leaderboard.length > 0 && (
@@ -246,20 +208,6 @@ export function HomeTab() {
       )}
 
       <style jsx>{`
-        @keyframes squat {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(20px);
-          }
-        }
-
-        .squat-animation {
-          animation: squat 2s ease-in-out infinite;
-        }
-
         .spinner {
           border: 3px solid rgba(255, 107, 53, 0.1);
           border-top-color: #ff6b35;
