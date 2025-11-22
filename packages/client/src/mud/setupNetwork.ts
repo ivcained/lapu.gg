@@ -38,24 +38,7 @@ import { sdk } from "@farcaster/miniapp-sdk";
 
 import { getNetworkConfig } from "./getNetworkConfig";
 import { world } from "./world";
-import {
-  getWalletCapabilities,
-  sendBatchCalls,
-  batchContractWrites,
-  type WalletCapabilities,
-} from "../lib/baseAccountUtils";
-import { BASE_ACCOUNT_CONFIG } from "../lib/baseAccountConfig";
-
-// Helper to check if we're running in a Farcaster miniapp context
-const isMiniApp = () => {
-  if (typeof window === "undefined") return false;
-  const url = new URL(window.location.href);
-  return (
-    url.searchParams.get("miniApp") === "true" ||
-    window.parent !== window ||
-    navigator.userAgent.includes("Farcaster")
-  );
-};
+import { isMiniAppSync } from "../farcaster";
 
 export type SetupNetworkResult = Awaited<ReturnType<typeof setupNetwork>>;
 
@@ -82,7 +65,7 @@ export async function setupNetwork() {
   let walletClient;
   let accountAddress: Hex;
 
-  if (isMiniApp()) {
+  if (isMiniAppSync()) {
     // Use Farcaster wallet provider in miniapp context
     try {
       const provider = sdk.wallet.getEthereumProvider();
@@ -187,7 +170,7 @@ export async function setupNetwork() {
    * less than 1 ETH. Repeat every 20 seconds to ensure you don't
    * run out.
    */
-  if (networkConfig.faucetServiceUrl && !isMiniApp()) {
+  if (networkConfig.faucetServiceUrl && !isMiniAppSync()) {
     const address = accountAddress;
     console.info("[Dev Faucet]: Player address -> ", address);
 
