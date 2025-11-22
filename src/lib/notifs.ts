@@ -1,5 +1,5 @@
-import { sendMiniAppNotification as sdkSendNotification } from "@farcaster/miniapp-node";
 import { getUserNotificationDetails } from "./kv";
+import { APP_URL } from "./constants";
 
 type SendMiniAppNotificationResult =
   | {
@@ -28,15 +28,30 @@ export async function sendMiniAppNotification({
   }
 
   try {
-    const result = await sdkSendNotification({
-      notificationDetails,
-      notification: {
+    const response = await fetch(notificationDetails.url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        notificationId: `notif-${Date.now()}`,
         title,
         body,
-      },
+        targetUrl: APP_URL,
+        tokens: [notificationDetails.token],
+      }),
     });
 
-    if (result.state === "rate_limit") {
+    if (!response.ok) {
+      if (response.status === 429) {
+        return { state: "rate_limit" };
+      }
+      return { state: "error", error: `HTTP ${response.status}` };
+    }
+
+    const result = await response.json();
+
+    if (result.result?.rateLimitedTokens?.length > 0) {
       return { state: "rate_limit" };
     }
 
