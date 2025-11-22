@@ -14,7 +14,8 @@
     "fmt:write": "prettier --write \"**/*.{ts,tsx,mdx}\" --cache"
   },
   "dependencies": {
-    "@coinbase/onchainkit": "^1.1.2",
+    "@farcaster/miniapp-node": "^0.1.11",
+    "@farcaster/miniapp-sdk": "^0.2.1",
     "@latticexyz/common": "2.0.0-next.11",
     "@latticexyz/dev-tools": "2.0.0-next.11",
     "@latticexyz/react": "2.0.0-next.11",
@@ -54,6 +55,7 @@
     "@types/react-dom": "^18.2.8",
     "@typescript-eslint/eslint-plugin": "^6.7.3",
     "@typescript-eslint/parser": "^6.7.3",
+    "@vercel/node": "^5.5.9",
     "@vitejs/plugin-react": "^3.1.0",
     "@vitejs/plugin-react-swc": "^3.4.0",
     "autoprefixer": "^10.4.16",
