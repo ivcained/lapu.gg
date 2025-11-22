@@ -75,9 +75,7 @@ function UplinkNode({ position, isActive, onActivate }: UplinkNodeProps) {
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
-            count={2}
-            array={new Float32Array([0, 0, 0, -position[0], -position[1], -position[2]])}
-            itemSize={3}
+            args={[new Float32Array([0, 0, 0, -position[0], -position[1], -position[2]]), 3]}
           />
         </bufferGeometry>
         <lineBasicMaterial color={isActive ? "#00ffff" : "#330011"} transparent opacity={0.3} />
