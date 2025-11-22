@@ -28,6 +28,39 @@ export default mudConfig({
         owner: "address",
       },
     },
+    PlayerResources: {
+      keySchema: {
+        player: "address",
+      },
+      valueSchema: {
+        coins: "uint256",
+        lastClaimTime: "uint256",
+      },
+    },
+    FacilityCost: {
+      keySchema: {
+        typeId: "uint32",
+      },
+      valueSchema: {
+        coinCost: "uint256",
+      },
+    },
+    FacilityIncome: {
+      keySchema: {
+        typeId: "uint32",
+      },
+      valueSchema: {
+        coinsPerHour: "uint256",
+      },
+    },
+    BuiltAt: {
+      keySchema: {
+        entityKey: "bytes32",
+      },
+      valueSchema: {
+        timestamp: "uint256",
+      },
+    },
   },
   modules: [
     {

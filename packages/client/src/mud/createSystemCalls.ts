@@ -61,8 +61,25 @@ export function createSystemCalls(
     await waitForTransaction(tx);
   };
 
+  const initializePlayer = async () => {
+    const tx = await worldContract.write.initializePlayer();
+    await waitForTransaction(tx);
+  };
+
+  const claimIncome = async () => {
+    const tx = await worldContract.write.claimIncome();
+    await waitForTransaction(tx);
+  };
+
+  const getPendingIncome = async (playerAddress: string) => {
+    return await worldContract.read.getPendingIncome([playerAddress]);
+  };
+
   return {
     increment,
     mudBuildFacility,
+    initializePlayer,
+    claimIncome,
+    getPendingIncome,
   };
 }
