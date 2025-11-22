@@ -1,6 +1,6 @@
 "use client";
 
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, useTexture, PerspectiveCamera, Stars } from "@react-three/drei";
 import { useRef, useState, Suspense, useMemo, useEffect } from "react";
 import * as THREE from "three";
@@ -56,9 +56,7 @@ function ParticleCloud({ count = 100 }: { count?: number }) {
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={count}
-          array={particles.positions}
-          itemSize={3}
+          args={[particles.positions, 3]}
         />
       </bufferGeometry>
       <pointsMaterial size={0.05} color="#ffffff" transparent opacity={0.6} sizeAttenuation />
@@ -215,7 +213,7 @@ function Sky() {
 function GameScene({
   currentIsland,
   onCrystalCollect,
-  gameTime
+  gameTime: _gameTime
 }: {
   currentIsland: number;
   onCrystalCollect: () => void;
