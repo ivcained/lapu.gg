@@ -219,8 +219,8 @@ function SkyIsland({ houseLevel }: { houseLevel: number }) {
         </mesh>
 
         {/* Roof */}
-        <mesh position={[0, 1.6, 0]} castShadow>
-          <coneGeometry args={[1.5, 1.2, 4]} rotation={[0, Math.PI / 4, 0]} />
+        <mesh position={[0, 1.6, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
+          <coneGeometry args={[1.5, 1.2, 4]} />
           <meshStandardMaterial color="#dc2626" roughness={0.5} />
         </mesh>
 
