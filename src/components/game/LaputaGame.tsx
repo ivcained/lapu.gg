@@ -15,15 +15,7 @@ import { useRef, useState, Suspense, useEffect } from "react";
 import * as THREE from "three";
 import { useMiniApp } from "@neynar/react";
 import { Button } from "../ui/Button";
-import {
-  Zap,
-  Hammer,
-  Users,
-  MapPin,
-  Plus,
-  ArrowUpCircle,
-  Sparkles as SparklesIcon,
-} from "lucide-react";
+import {\n  Zap,\n  Hammer,\n  MapPin,\n  ArrowUpCircle,\n} from "lucide-react";
 
 // --- Types ---
 type ResourceType = "AETHER" | "STONE";
@@ -427,30 +419,9 @@ function GameScene({
       <hemisphereLight intensity={0.5} color="#87ceeb" groundColor="#8b7355" />
 
       {/* Clouds */}
-      <Cloud
-        opacity={0.4}
-        speed={0.3}
-        width={12}
-        depth={2}
-        segments={25}
-        position={[-8, 12, -15]}
-      />
-      <Cloud
-        opacity={0.3}
-        speed={0.25}
-        width={15}
-        depth={2}
-        segments={25}
-        position={[12, 8, -20]}
-      />
-      <Cloud
-        opacity={0.35}
-        speed={0.2}
-        width={10}
-        depth={1.5}
-        segments={20}
-        position={[5, 15, -25]}
-      />
+      <Cloud opacity={0.4} speed={0.3} position={[-8, 12, -15]} />
+      <Cloud opacity={0.3} speed={0.25} position={[12, 8, -20]} />
+      <Cloud opacity={0.35} speed={0.2} position={[5, 15, -25]} />
 
       {/* Main Island */}
       <Float speed={0.8} rotationIntensity={0.05} floatIntensity={0.3}>
@@ -689,3 +660,5 @@ export default function LaputaGame() {
     </div>
   );
 }
+
+
