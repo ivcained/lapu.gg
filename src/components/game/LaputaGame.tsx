@@ -15,7 +15,7 @@ import { useRef, useState, Suspense, useEffect } from "react";
 import * as THREE from "three";
 import { useMiniApp } from "@neynar/react";
 import { Button } from "../ui/Button";
-import {\n  Zap,\n  Hammer,\n  MapPin,\n  ArrowUpCircle,\n} from "lucide-react";
+import { Zap, Hammer, MapPin, ArrowUpCircle } from "lucide-react";
 
 // --- Types ---
 type ResourceType = "AETHER" | "STONE";
