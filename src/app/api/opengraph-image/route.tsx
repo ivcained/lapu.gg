@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
                 marginBottom: "32px",
               }}
             >
-              just completed a squat session! 💪
+              just completed a session! 💪
             </div>
 
             <div
@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
                     color: "rgba(255, 255, 255, 0.8)",
                   }}
                 >
-                  jsqt Points
+                  Points
                 </div>
               </div>
             </div>
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
                 color: "rgba(255, 255, 255, 0.7)",
               }}
             >
-              Join me on JesseSquats! 🏋️
+              Join me on Lapu! 🏋️
             </div>
           </div>
         ),
@@ -195,7 +195,7 @@ export async function GET(request: NextRequest) {
               marginBottom: "32px",
             }}
           >
-            just crushed it at JesseSquats! 💪
+            just crushed it at Lapu! 💪
           </div>
 
           {squatData && (
@@ -232,7 +232,7 @@ export async function GET(request: NextRequest) {
                     color: "rgba(255, 255, 255, 0.8)",
                   }}
                 >
-                  Total Squats
+                  Total Score
                 </div>
               </div>
               <div
@@ -257,7 +257,7 @@ export async function GET(request: NextRequest) {
                     color: "rgba(255, 255, 255, 0.8)",
                   }}
                 >
-                  jsqt Points
+                  Points
                 </div>
               </div>
             </div>
@@ -271,7 +271,7 @@ export async function GET(request: NextRequest) {
               color: "rgba(255, 255, 255, 0.7)",
             }}
           >
-            Join the squat revolution! 🏋️
+            Join the adventure! 🏝️
           </div>
         </div>
       ),
@@ -304,7 +304,7 @@ export async function GET(request: NextRequest) {
               fontWeight: "bold",
             }}
           >
-            JesseSquats
+            Lapu
           </div>
           <div
             style={{
@@ -314,7 +314,7 @@ export async function GET(request: NextRequest) {
               marginTop: "16px",
             }}
           >
-            Get squatting! 💪
+            Explore floating islands! 🏝️
           </div>
         </div>
       ),

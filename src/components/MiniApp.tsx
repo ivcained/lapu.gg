@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useMiniApp } from "@neynar/react";
 import sdk from "@farcaster/miniapp-sdk";
 import { HomeTab } from "~/components/ui/tabs";
@@ -8,8 +8,6 @@ import { HomeTab } from "~/components/ui/tabs";
 // --- Types ---
 export enum Tab {
   Home = "home",
-  Actions = "actions",
-  Context = "context",
 }
 
 export interface AppProps {
@@ -17,7 +15,7 @@ export interface AppProps {
 }
 
 /**
- * MiniApp component serves as the main container for the Jesse Squats mini app.
+ * MiniApp component serves as the main container for the Lapu mini app.
  *
  * This component orchestrates the overall mini app experience by:
  * - Managing tab navigation and state
@@ -43,6 +41,7 @@ export interface AppProps {
 export default function MiniApp() {
   // --- Hooks ---
   const { isSDKLoaded, context, setInitialTab, currentTab } = useMiniApp();
+  const readyCalledRef = useRef(false);
 
   // --- Effects ---
   /**
@@ -63,18 +62,23 @@ export default function MiniApp() {
    * Wait for SDK to load and component to render
    */
   useEffect(() => {
-    if (isSDKLoaded && currentTab === Tab.Home) {
-      // Small delay to ensure HomeTab has rendered
-      const timer = setTimeout(() => {
+    if (isSDKLoaded && currentTab === Tab.Home && !readyCalledRef.current) {
+      // Use requestAnimationFrame to ensure DOM has rendered
+      const frameId = requestAnimationFrame(() => {
         try {
           sdk.actions.ready();
-          console.log("SDK ready() called successfully");
+          readyCalledRef.current = true;
+          if (process.env.NODE_ENV === "development") {
+            console.log("SDK ready() called successfully");
+          }
         } catch (error) {
-          console.error("Error calling sdk.actions.ready():", error);
+          if (process.env.NODE_ENV === "development") {
+            console.error("Error calling sdk.actions.ready():", error);
+          }
         }
-      }, 100);
+      });
 
-      return () => clearTimeout(timer);
+      return () => cancelAnimationFrame(frameId);
     }
   }, [isSDKLoaded, currentTab]);
 
@@ -102,7 +106,7 @@ export default function MiniApp() {
     >
       {/* Main content - no header or footer */}
       <div className="container py-2">
-        {/* Tab content rendering - only Home tab for JesseSquats */}
+        {/* Tab content rendering - only Home tab for Lapu */}
         {currentTab === Tab.Home && <HomeTab />}
       </div>
     </div>

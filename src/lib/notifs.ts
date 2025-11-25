@@ -49,13 +49,17 @@ export async function sendMiniAppNotification({
       return { state: "error", error: `HTTP ${response.status}` };
     }
 
-    const result = await response.json();
+    try {
+      const result = await response.json();
 
-    if (result.result?.rateLimitedTokens?.length > 0) {
-      return { state: "rate_limit" };
+      if (result.result?.rateLimitedTokens?.length > 0) {
+        return { state: "rate_limit" };
+      }
+
+      return { state: "success" };
+    } catch (jsonError) {
+      return { state: "error", error: "Invalid JSON response" };
     }
-
-    return { state: "success" };
   } catch (error) {
     return { state: "error", error };
   }

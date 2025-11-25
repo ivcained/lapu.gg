@@ -42,6 +42,12 @@ export async function POST(request: NextRequest) {
           { success: false, error: error.message },
           { status: 500 }
         );
+      default:
+        // If we reach here, an unknown error occurred
+        return Response.json(
+          { success: false, error: "Unknown error occurred" },
+          { status: 500 }
+        );
     }
   }
 
@@ -95,7 +101,9 @@ export async function POST(request: NextRequest) {
         break;
     }
   } catch (error) {
-    console.error("Error processing webhook:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error processing webhook:", error);
+    }
   }
 
   return Response.json({ success: true });

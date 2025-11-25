@@ -30,8 +30,8 @@ export async function POST(request: NextRequest) {
   // Only store notification details if not using Neynar
   if (!neynarEnabled) {
     await setUserNotificationDetails(
-      Number(requestBody.data.fid),
-      Number(requestBody.data.appFid),
+      requestBody.data.fid,
+      requestBody.data.appFid,
       requestBody.data.notificationDetails
     );
   }
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
   // Use appropriate notification function based on Neynar status
   if (neynarEnabled) {
     const sendResult = await sendNeynarMiniAppNotification({
-      fid: Number(requestBody.data.fid),
+      fid: requestBody.data.fid,
       title: "Test notification",
       body: "Sent at " + new Date().toISOString(),
     });
@@ -57,8 +57,8 @@ export async function POST(request: NextRequest) {
     }
   } else {
     const sendResult = await sendMiniAppNotification({
-      fid: Number(requestBody.data.fid),
-      appFid: Number(requestBody.data.appFid),
+      fid: requestBody.data.fid,
+      appFid: requestBody.data.appFid,
       title: "Test notification",
       body: "Sent at " + new Date().toISOString(),
     });

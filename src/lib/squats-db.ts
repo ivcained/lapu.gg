@@ -4,14 +4,22 @@ import { APP_NAME } from "./constants";
 // In-memory fallback storage
 const localSquatStore = new Map<string, SquatStats>();
 
-// Use Redis if KV env vars are present, otherwise use in-memory
-const useRedis = process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN;
-const redis = useRedis
-  ? new Redis({
-      url: process.env.KV_REST_API_URL!,
-      token: process.env.KV_REST_API_TOKEN!,
-    })
-  : null;
+// Lazy Redis initialization
+let redis: Redis | null = null;
+
+function getRedis(): Redis | null {
+  if (
+    redis === null &&
+    process.env.KV_REST_API_URL &&
+    process.env.KV_REST_API_TOKEN
+  ) {
+    redis = new Redis({
+      url: process.env.KV_REST_API_URL,
+      token: process.env.KV_REST_API_TOKEN,
+    });
+  }
+  return redis;
+}
 
 export interface SquatStats {
   totalSquats: number;
@@ -27,8 +35,9 @@ export async function getUserSquatStats(
   fid: number
 ): Promise<SquatStats | null> {
   const key = getUserSquatStatsKey(fid);
-  if (redis) {
-    return await redis.get<SquatStats>(key);
+  const redisClient = getRedis();
+  if (redisClient) {
+    return await redisClient.get<SquatStats>(key);
   }
   return localSquatStore.get(key) || null;
 }
@@ -38,8 +47,9 @@ export async function setUserSquatStats(
   stats: SquatStats
 ): Promise<void> {
   const key = getUserSquatStatsKey(fid);
-  if (redis) {
-    await redis.set(key, stats);
+  const redisClient = getRedis();
+  if (redisClient) {
+    await redisClient.set(key, stats);
   } else {
     localSquatStore.set(key, stats);
   }
@@ -61,8 +71,9 @@ export async function incrementUserSquats(
 
 export async function deleteUserSquatStats(fid: number): Promise<void> {
   const key = getUserSquatStatsKey(fid);
-  if (redis) {
-    await redis.del(key);
+  const redisClient = getRedis();
+  if (redisClient) {
+    await redisClient.del(key);
   } else {
     localSquatStore.delete(key);
   }
